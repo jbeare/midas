@@ -2,67 +2,10 @@
 #include <stdio.h>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/naive_bayes/naive_bayes_classifier.hpp>
+#include <mlpack/methods/pca/pca.hpp>
+#include "Classifier.h"
 
 using namespace mlpack;
-
-void AnalyzeResults(std::string symbol, arma::Row<arma::u64> labels, arma::Row<arma::u64>& results)
-{
-    int correct = 0;
-    int truetrade = 0;
-    int falsetrade = 0;
-
-    for (int i = 0; i < labels.size(); i++)
-    {
-        if (labels[i] == results[i])
-        {
-            correct++;
-        }
-
-        if (labels[i] && results[i])
-        {
-            truetrade++;
-        }
-
-        if (!labels[i] && results[i])
-        {
-            falsetrade++;
-        }
-    }
-
-    printf("%s: %d/%d = %f tt: %d ft: %d\n", symbol.c_str(), correct, labels.size(), (float)correct / labels.size(), truetrade, falsetrade);
-}
-
-void SimulateTrading(std::string symbol, arma::mat& data, arma::Row<arma::u64>& results)
-{
-    double baseline = 0;
-    double profit = 0;
-    int trades = 0;
-    int goodTrades = 0;
-    int badTrades = 0;
-    int goodBaseline = 0;
-    int badBaseline = 0;
-
-    for (int i = 1; i < data.n_rows - 1; i++)
-    {
-        if ((data.row(i)[0] - data.row(i - 1)[0] <= 60) && (data.row(i + 1)[0] - data.row(i)[0] <= 60))
-        {
-            double delta = data.row(i + 1)[2] - data.row(i)[4];
-            baseline += delta;
-            (delta > 0) ? goodBaseline++ : badBaseline++;
-
-            if (results[i])
-            {
-                trades++;
-                profit += delta;
-                (delta > 0) ? goodTrades++ : badTrades++;
-            }
-
-            //printf("t: %f c: %f r: %d d: %f\n", data.row(i)[0], data.row(i)[4], results[i], delta);
-        }
-    }
-
-    printf("%s: baseline: %f profit: %f trades: %d gt: %d bt: %d gb: %d bb: %d\n", symbol.c_str(), baseline, profit, trades, goodTrades, badTrades, goodBaseline, badBaseline);
-}
 
 void Analyze(arma::mat& data, arma::u64_mat& labels, arma::u64_mat& results)
 {
@@ -113,6 +56,81 @@ void Analyze(arma::mat& data, arma::u64_mat& labels, arma::u64_mat& results)
 
         printf("For label %2d we got %4d/%4d (%2.2f) %4d/%4d (%2.2f)\n", i, correct, total, (float)correct/total, correctTrades, totalTrades, (float)correctTrades/totalTrades);
     }
+
+    float maxGain[8] = {};
+    float actGain[8] = {};
+
+    for (int i = 0; i < data.n_rows - 1; i++)
+    {
+        auto l = labels.col(i);
+        auto r = results.col(i);
+        auto d = data.row(i);
+
+        if (l.n_rows != 7)
+        {
+            // We should have the number of labels + 1
+            printf("Data error!");
+        }
+
+        for (int j = l.n_rows - 1; j >= 0; j--)
+        {
+            if (l[j])
+            {
+                maxGain[j]++;
+                maxGain[7] += data.row(i + 1)[2] - data.row(i)[4];
+                break;
+            }
+        }
+
+        for (int j = l.n_rows - 1; j >= 0; j--)
+        {
+            if (r[j])
+            {
+                if (l[j])
+                {
+                    actGain[j]++;
+                    actGain[7] += data.row(i + 1)[2] - data.row(i)[4];
+                }
+                else
+                {
+                    // TODO: Think about this some more; we're basically saying on failed classification we cash out at the end of the interval.
+                    //actGain[j]--;
+                    actGain[7] -= data.row(i + 1)[4] - data.row(i)[4];
+                }
+                break;
+            }
+        }
+    }
+
+    maxGain[0] = maxGain[0] * 0.005;
+    maxGain[1] = maxGain[1] * 0.01;
+    maxGain[2] = maxGain[2] * 0.05;
+    maxGain[3] = maxGain[3] * 0.10;
+    maxGain[4] = maxGain[4] * 0.15;
+    maxGain[5] = maxGain[5] * 0.20;
+    maxGain[6] = maxGain[6] * 0.50;
+    float maxGainTotal = maxGain[0] + maxGain[1] + maxGain[2] + maxGain[3] + maxGain[4] + maxGain[5] + maxGain[6];
+
+    actGain[0] = actGain[0] * 0.005;
+    actGain[1] = actGain[1] * 0.01;
+    actGain[2] = actGain[2] * 0.05;
+    actGain[3] = actGain[3] * 0.10;
+    actGain[4] = actGain[4] * 0.15;
+    actGain[5] = actGain[5] * 0.20;
+    actGain[6] = actGain[6] * 0.50;
+    float actGainTotal = actGain[0] + actGain[1] + actGain[2] + actGain[3] + actGain[4] + actGain[5] + actGain[6];
+
+    printf("     .005     |      .01      |      .05      |      .10      |      .15      |     Gain      |   Max Gain   \n");
+    printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n",
+        actGain[0], maxGain[0],
+        actGain[1], maxGain[1],
+        actGain[2], maxGain[2],
+        actGain[3], maxGain[3],
+        actGain[4], maxGain[4],
+        //actGain[5], maxGain[5],
+        //actGain[6], maxGain[6],
+        actGainTotal, maxGainTotal,
+        actGain[7], maxGain[7]);
 }
 
 int main(int argc, char** argv)
@@ -141,17 +159,6 @@ int main(int argc, char** argv)
         training_data = aapl_data.cols(arma::span(0, aapl_data.n_cols - 801));
         training_labels = aapl_labels.cols(arma::span(0, aapl_labels.n_cols - 801));
 
-        printf("training_data   %d %d\n", training_data.n_cols, training_data.n_rows);
-        printf("testing_data    %d %d\n", testing_data.n_cols, testing_data.n_rows);
-        printf("training_labels %d %d\n", training_labels.n_cols, training_labels.n_rows);
-        printf("testing_labels  %d %d\n", testing_labels.n_cols, testing_labels.n_rows);
-        printf("aapl_data %d %d\n", aapl_data.n_cols, aapl_data.n_rows);
-        printf("ibm_data %d %d\n", ibm_data.n_cols, ibm_data.n_rows);
-        printf("intc_data  %d %d\n", intc_data.n_cols, intc_data.n_rows);
-        printf("aapl_labels %d %d\n", aapl_labels.n_cols, aapl_labels.n_rows);
-        printf("ibm_labels %d %d\n", ibm_labels.n_cols, ibm_labels.n_rows);
-        printf("intc_labels  %d %d\n", intc_labels.n_cols, intc_labels.n_rows);
-
         arma::mat aapl, ibm, intc;
 
         aapl.load("AAPL_raw.csv", arma::file_type::csv_ascii);
@@ -160,22 +167,16 @@ int main(int argc, char** argv)
 
         arma::u64_mat aapl_results, ibm_results, intc_results, testing_results;
 
+        //static int dimensions = 5;
+        //dimensions++;
         for (int i = 0; i < training_labels.n_rows; i++)
         {
-            arma::Row<arma::u64> results;
-            naive_bayes::NaiveBayesClassifier<> nbc(training_data, training_labels.row(i), 2, false);
-            nbc.Classify(aapl_data, results);
-            aapl_results.insert_rows(aapl_results.n_rows, results);
-            results.clear();
-            nbc.Classify(ibm_data, results);
-            ibm_results.insert_rows(ibm_results.n_rows, results);
-            results.clear();
-            nbc.Classify(intc_data, results);
-            intc_results.insert_rows(intc_results.n_rows, results);
-            results.clear();
-            nbc.Classify(testing_data, results);
-            testing_results.insert_rows(testing_results.n_rows, results);
-            results.clear();
+            // Experimentally, 7 dimensions seems to work well for the # of features I chose...
+            Midas::Classifier c(training_data, training_labels.row(i), 7, 2);
+            aapl_results.insert_rows(aapl_results.n_rows, c.Classify(aapl_data));
+            ibm_results.insert_rows(ibm_results.n_rows, c.Classify(ibm_data));
+            intc_results.insert_rows(intc_results.n_rows, c.Classify(intc_data));
+            testing_results.insert_rows(testing_results.n_rows, c.Classify(testing_data));
         }
 
         Analyze(aapl, aapl_labels, aapl_results);

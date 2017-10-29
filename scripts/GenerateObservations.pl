@@ -88,7 +88,7 @@ sub GetObservations
         #push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);
         
         #good 94
-        push @observation, GetDelta($raw[$i][4], $raw[$i][1]);
+        #push @observation, GetDelta($raw[$i][4], $raw[$i][1]);
         
         #good 90
         #push @observation, GetDelta($raw[$i][1], $raw[$i - 1][1]);
@@ -112,19 +112,19 @@ sub GetObservations
         #push(@observation, ((($raw[$i][4] - $raw[$i - 4][1]) / $raw[$i - 4][1]) / 2) + .5); # Relative delta in open/close for current event n-1 ((c - o)/o)/2+.5
         #push(@observation, ((($raw[$i][4] - $raw[$i - 5][1]) / $raw[$i - 5][1]) / 2) + .5); # Relative delta in open/close for current event n-1 ((c - o)/o)/2+.5
         
-        #push @observation, GetDelta($raw[$i][4], $raw[$i][1]);
+        push @observation, GetDelta($raw[$i][4], $raw[$i][1]);
         
-        #push @observation, GetDelta($raw[$i - 1][4], $raw[$i - 1][1]);
-        #push @observation, GetDelta($raw[$i - 2][4], $raw[$i - 2][1]);
-        #push @observation, GetDelta($raw[$i - 3][4], $raw[$i - 3][1]);
-        #push @observation, GetDelta($raw[$i - 4][4], $raw[$i - 4][1]);
-        #push @observation, GetDelta($raw[$i - 5][4], $raw[$i - 5][1]);
+        push @observation, GetDelta($raw[$i - 1][4], $raw[$i - 1][1]);
+        push @observation, GetDelta($raw[$i - 2][4], $raw[$i - 2][1]);
+        push @observation, GetDelta($raw[$i - 3][4], $raw[$i - 3][1]);
+        push @observation, GetDelta($raw[$i - 4][4], $raw[$i - 4][1]);
+        push @observation, GetDelta($raw[$i - 5][4], $raw[$i - 5][1]);
         
-        #push @observation, GetDelta($raw[$i][4], $raw[$i - 1][1]);  
-        #push @observation, GetDelta($raw[$i][4], $raw[$i - 2][1]);  
-        #push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);  
-        #push @observation, GetDelta($raw[$i][4], $raw[$i - 4][1]);  
-        #push @observation, GetDelta($raw[$i][4], $raw[$i - 5][1]);  
+        push @observation, GetDelta($raw[$i][4], $raw[$i - 1][1]);  
+        push @observation, GetDelta($raw[$i][4], $raw[$i - 2][1]);  
+        push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);  
+        push @observation, GetDelta($raw[$i][4], $raw[$i - 4][1]);  
+        push @observation, GetDelta($raw[$i][4], $raw[$i - 5][1]);  
 
         #push @observation, GetTimeOfDay($raw[$i][0]);
         #push @observation, GetTimeOfWeek($raw[$i][0]);
@@ -167,7 +167,7 @@ sub GetObservations
             ($raw[$i + 1][2] > ($raw[$i][4] + 0.20)) + 0,
             ($raw[$i + 1][2] > ($raw[$i][4] + 0.50)) + 0,
             ]);
-            
+        
         print $rawFile join(',', @{$raw[$i]}) . "\n";
     }
 
