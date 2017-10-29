@@ -7,7 +7,7 @@
 
 using namespace mlpack;
 
-void Analyze(arma::mat& data, arma::u64_mat& labels, arma::u64_mat& results)
+void Analyze(arma::mat& data, arma::Row<size_t>& labels, arma::Row<size_t>& results)
 {
     if ((data.n_rows != labels.n_cols) || (results.n_cols != labels.n_cols) || (results.n_rows != labels.n_rows))
     {
@@ -15,121 +15,93 @@ void Analyze(arma::mat& data, arma::u64_mat& labels, arma::u64_mat& results)
         return;
     }
 
-    //results.print();
-    
-    // Each loop is a different classification
-    for (int i = 0; i < labels.n_rows; i++)
-    {
-        auto l = labels.row(i);
-        auto r = results.row(i);
-
-        int total = 0;
-        int correct = 0;
-        int totalTrades = 0;
-        int correctTrades = 0;
-
-        // Each loop is a different observation
-        for (int j = 0; j < data.n_rows; j++)
-        {
-            auto d = data.row(j);
-
-            if (l[j] == r[j])
-            {
-                correct++;
-            }
-            total++;
-
-            if (r[j] == 1)
-            {
-                totalTrades++;
-                if (l[j] == r[j])
-                {
-                    correctTrades++;
-                }
-            }
-        }
-
-        if (i == 0)
-        {
-            printf("\n");
-        }
-
-        printf("For label %2d we got %4d/%4d (%2.2f) %4d/%4d (%2.2f)\n", i, correct, total, (float)correct/total, correctTrades, totalTrades, (float)correctTrades/totalTrades);
-    }
-
     float maxGain[8] = {};
     float actGain[8] = {};
+    int labelSpread[8]{};
+    int resultSpread[8]{};
+    int correctSpread[8]{};
+    int underSpread[8]{};
+    int overSpread[8]{};
+    int correct{};
+    int under{};
+    int over{};
 
-    for (int i = 0; i < data.n_rows - 1; i++)
+    for (int i = 1; i < data.n_rows - 1; i++)
     {
-        auto l = labels.col(i);
-        auto r = results.col(i);
-        auto d = data.row(i);
+        labelSpread[labels[i]]++;
+        resultSpread[results[i]]++;
 
-        if (l.n_rows != 7)
+        if (labels[i] == results[i]) // We classified the data correctly.
         {
-            // We should have the number of labels + 1
-            printf("Data error!");
-        }
-
-        for (int j = l.n_rows - 1; j >= 0; j--)
-        {
-            if (l[j])
+            // Gain profit equal to the classification.
+            if (labels[i] > 0)
             {
-                maxGain[j]++;
-                maxGain[7] += data.row(i + 1)[2] - data.row(i)[4];
-                break;
+                actGain[results[i]]++;
             }
+            correct++;
+            correctSpread[results[i]]++;
         }
-
-        for (int j = l.n_rows - 1; j >= 0; j--)
+        else if (labels[i] > results[i]) // We underestimated the classification.
         {
-            if (r[j])
+            // Gain profit equal to the under-classification.
+            if (labels[i] > 0)
             {
-                if (l[j])
-                {
-                    actGain[j]++;
-                    actGain[7] += data.row(i + 1)[2] - data.row(i)[4];
-                }
-                else
-                {
-                    // TODO: Think about this some more; we're basically saying on failed classification we cash out at the end of the interval.
-                    //actGain[j]--;
-                    actGain[7] -= data.row(i + 1)[4] - data.row(i)[4];
-                }
-                break;
+                actGain[results[i]]++;
             }
+            under++;
+            underSpread[labels[i] - results[i]]++;
+        }
+        else // We overestimated the classification.
+        {
+            // It's a wash.
+            over++;
+            overSpread[results[i] - labels[i]]++;
         }
     }
 
-    maxGain[0] = maxGain[0] * 0.005;
-    maxGain[1] = maxGain[1] * 0.01;
-    maxGain[2] = maxGain[2] * 0.05;
-    maxGain[3] = maxGain[3] * 0.10;
-    maxGain[4] = maxGain[4] * 0.15;
-    maxGain[5] = maxGain[5] * 0.20;
-    maxGain[6] = maxGain[6] * 0.50;
-    float maxGainTotal = maxGain[0] + maxGain[1] + maxGain[2] + maxGain[3] + maxGain[4] + maxGain[5] + maxGain[6];
+    maxGain[0] = labelSpread[0] * 0;
+    maxGain[1] = labelSpread[1] * 0.005;
+    maxGain[2] = labelSpread[2] * 0.01;
+    maxGain[3] = labelSpread[3] * 0.05;
+    maxGain[4] = labelSpread[4] * 0.10;
+    maxGain[5] = labelSpread[5] * 0.15;
+    maxGain[6] = labelSpread[6] * 0.20;
+    maxGain[7] = labelSpread[7] * 0.25;
+    float maxGainTotal = maxGain[0] + maxGain[1] + maxGain[2] + maxGain[3] + maxGain[4] + maxGain[5] + maxGain[6] + maxGain[7];
 
-    actGain[0] = actGain[0] * 0.005;
-    actGain[1] = actGain[1] * 0.01;
-    actGain[2] = actGain[2] * 0.05;
-    actGain[3] = actGain[3] * 0.10;
-    actGain[4] = actGain[4] * 0.15;
-    actGain[5] = actGain[5] * 0.20;
-    actGain[6] = actGain[6] * 0.50;
-    float actGainTotal = actGain[0] + actGain[1] + actGain[2] + actGain[3] + actGain[4] + actGain[5] + actGain[6];
+    actGain[0] = actGain[0] * 0;
+    actGain[1] = actGain[1] * 0.005;
+    actGain[2] = actGain[2] * 0.01;
+    actGain[3] = actGain[3] * 0.05;
+    actGain[4] = actGain[4] * 0.10;
+    actGain[5] = actGain[5] * 0.15;
+    actGain[6] = actGain[6] * 0.20;
+    actGain[7] = actGain[7] * 0.25;
+    float actGainTotal = actGain[0] + actGain[1] + actGain[2] + actGain[3] + actGain[4] + actGain[5] + actGain[6] + actGain[7];
 
-    printf("     .005     |      .01      |      .05      |      .10      |      .15      |     Gain      |   Max Gain   \n");
-    printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n",
-        actGain[0], maxGain[0],
+    // Accuracy (spot on, over, under)
+    // Oppourtunities taken (taken chances/total chances, correct changes/total chances)
+    // Gainz (actual gain / max gain)
+
+    int c = correct;
+    int r = data.n_rows;
+    printf("Accuracy +/-0:%d/%d(%.2f) +/-1:%d/%d(%.2f) +/-2:%d/%d(%.2f) +/-3:%d/%d(%.2f) +/-4:%d/%d(%.2f)\n",
+        c, r, (float)c / r,
+        c + underSpread[1] + overSpread[1], r, ((float)c + underSpread[1] + overSpread[1]) / r,
+        c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2]) / r,
+        c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3]) / r,
+        c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4]) / r);
+
+    printf("Gain %f/%f\n",actGainTotal, maxGainTotal);
+
+    printf("     .005     |      .01      |      .05      |      .10      |      .15      |      .20      |      .25\n");
+    printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n\n",
         actGain[1], maxGain[1],
         actGain[2], maxGain[2],
         actGain[3], maxGain[3],
         actGain[4], maxGain[4],
-        //actGain[5], maxGain[5],
-        //actGain[6], maxGain[6],
-        actGainTotal, maxGainTotal,
+        actGain[5], maxGain[5],
+        actGain[6], maxGain[6],
         actGain[7], maxGain[7]);
 }
 
@@ -138,7 +110,7 @@ int main(int argc, char** argv)
     while (1)
     {
         arma::mat training_data, testing_data, aapl_data, ibm_data, intc_data;
-        arma::u64_mat training_labels, testing_labels, aapl_labels, ibm_labels, intc_labels;
+        arma::Row<size_t> training_labels, testing_labels, aapl_labels, ibm_labels, intc_labels;
         
         aapl_data.load("AAPL_observations.csv", arma::file_type::csv_ascii);
         aapl_labels.load("AAPL_labels.csv", arma::file_type::csv_ascii);
@@ -150,9 +122,6 @@ int main(int argc, char** argv)
         aapl_data = aapl_data.t();
         ibm_data = ibm_data.t();
         intc_data = intc_data.t();
-        aapl_labels = aapl_labels.t();
-        ibm_labels = ibm_labels.t();
-        intc_labels = intc_labels.t();
 
         testing_data = aapl_data.cols(arma::span(aapl_data.n_cols - 800, aapl_data.n_cols - 1));
         testing_labels = aapl_labels.cols(arma::span(aapl_labels.n_cols - 800, aapl_labels.n_cols - 1));
@@ -165,19 +134,15 @@ int main(int argc, char** argv)
         ibm.load("IBM_raw.csv", arma::file_type::csv_ascii);
         intc.load("INTC_raw.csv", arma::file_type::csv_ascii);
 
-        arma::u64_mat aapl_results, ibm_results, intc_results, testing_results;
+        arma::Row<size_t> aapl_results, ibm_results, intc_results, testing_results;
 
         //static int dimensions = 5;
         //dimensions++;
-        for (int i = 0; i < training_labels.n_rows; i++)
-        {
-            // Experimentally, 7 dimensions seems to work well for the # of features I chose...
-            Midas::Classifier c(training_data, training_labels.row(i), 7, 2);
-            aapl_results.insert_rows(aapl_results.n_rows, c.Classify(aapl_data));
-            ibm_results.insert_rows(ibm_results.n_rows, c.Classify(ibm_data));
-            intc_results.insert_rows(intc_results.n_rows, c.Classify(intc_data));
-            testing_results.insert_rows(testing_results.n_rows, c.Classify(testing_data));
-        }
+        // Experimentally, 7 dimensions seems to work well for the # of features I chose...
+        Midas::Classifier c(training_data, training_labels, 7, 8);
+        aapl_results = c.Classify(aapl_data);
+        ibm_results = c.Classify(ibm_data);
+        intc_results = c.Classify(intc_data);
 
         Analyze(aapl, aapl_labels, aapl_results);
         Analyze(ibm, ibm_labels, ibm_results);

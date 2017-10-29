@@ -158,15 +158,50 @@ sub GetObservations
         
         #push(@labels, ($raw[$i + 1][4] > $raw[$i][4]) + 0); # result
         
-        push(@labels, [
-            ($raw[$i + 1][2] > ($raw[$i][4] + 0.005)) + 0,
-            ($raw[$i + 1][2] > ($raw[$i][4] + 0.01)) + 0,
-            ($raw[$i + 1][2] > ($raw[$i][4] + 0.05)) + 0,
-            ($raw[$i + 1][2] > ($raw[$i][4] + 0.10)) + 0,
-            ($raw[$i + 1][2] > ($raw[$i][4] + 0.15)) + 0,
-            ($raw[$i + 1][2] > ($raw[$i][4] + 0.20)) + 0,
-            ($raw[$i + 1][2] > ($raw[$i][4] + 0.50)) + 0,
-            ]);
+        #push(@labels, [
+        #    ($raw[$i + 1][2] > ($raw[$i][4] + 0.005)) + 0,
+        #    ($raw[$i + 1][2] > ($raw[$i][4] + 0.01)) + 0,
+        #    ($raw[$i + 1][2] > ($raw[$i][4] + 0.05)) + 0,
+        #    ($raw[$i + 1][2] > ($raw[$i][4] + 0.10)) + 0,
+        #    ($raw[$i + 1][2] > ($raw[$i][4] + 0.15)) + 0,
+        #    ($raw[$i + 1][2] > ($raw[$i][4] + 0.20)) + 0,
+        #    ($raw[$i + 1][2] > ($raw[$i][4] + 0.50)) + 0,
+        #    ]);
+        
+        my $delta = $raw[$i + 1][2] - $raw[$i][4];
+        
+        if($delta > 0.25)
+        {
+            push(@labels, 7);
+        }
+        elsif($delta > 0.20)
+        {
+            push(@labels, 6);
+        }
+        elsif($delta > 0.15)
+        {
+            push(@labels, 5);
+        }
+        elsif($delta > 0.10)
+        {
+            push(@labels, 4);
+        }
+        elsif($delta > 0.05)
+        {
+            push(@labels, 3);
+        }
+        elsif($delta > 0.01)
+        {
+            push(@labels, 2);
+        }
+        elsif($delta > 0.005)
+        {
+            push(@labels, 1);
+        }
+        else
+        {
+            push(@labels, 0);
+        }
         
         print $rawFile join(',', @{$raw[$i]}) . "\n";
     }
@@ -178,12 +213,12 @@ sub GetObservations
         print $writeFile join(',', @$observation) . "\n";
     }
     
-    for my $label (@labels)
-    {
-        print $labelFile join(',', @$label) . "\n";
-    }
+    #for my $label (@labels)
+    #{
+    #    print $labelFile join(',', @$label) . "\n";
+    #}
 
-    #print $labelFile join(',', @labels);
+    print $labelFile join(',', @labels);
         
     close($readFile);
     close($writeFile);
