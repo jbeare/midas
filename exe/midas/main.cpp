@@ -3,6 +3,7 @@
 #include <mlpack/core.hpp>
 #include <mlpack/methods/naive_bayes/naive_bayes_classifier.hpp>
 #include <mlpack/methods/pca/pca.hpp>
+#include <map>
 #include "Classifier.h"
 #include "FeatureFinder.h"
 
@@ -39,15 +40,32 @@ int main(int argc, char** argv)
 
         arma::Row<size_t> aapl_results, ibm_results, intc_results, testing_results;
 
-        FeatureFinder::FindFeatures(aapl_data, aapl_labels, ibm, ibm_data, ibm_labels);
+        /*
+        auto specs = FeatureFinder::FindFeatures(aapl_data, aapl_labels, ibm, ibm_data, ibm_labels, aapl_data.n_rows);
 
-        //static int dimensions = 5;
-        //dimensions++;
-        // Experimentally, 7 dimensions seems to work well for the # of features I chose...
-        Midas::Classifier c(training_data, training_labels, 7, 8);
+        std::map<uint32_t, uint32_t> featureMap;
+
+        for (auto& spec : specs)
+        {
+            for (auto& feature : spec.Features)
+            {
+                featureMap[feature]++;
+            }
+        }
+
+        for (auto& pair : featureMap)
+        {
+            printf("%d : %d\n", pair.first, pair.second);
+        }
+        */
+
+        Midas::Classifier c(aapl_data, aapl_labels, 5, 8);
         aapl_results = c.Classify(aapl_data);
         ibm_results = c.Classify(ibm_data);
         intc_results = c.Classify(intc_data);
+        FeatureFinder::Analyze(aapl, aapl_labels, aapl_results);
+        FeatureFinder::Analyze(ibm, ibm_labels, ibm_results);
+        FeatureFinder::Analyze(intc, intc_labels, intc_results);
 
         system("pause");
     }

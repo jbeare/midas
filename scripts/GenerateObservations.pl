@@ -95,10 +95,6 @@ sub GetObservations
     {
         my @observation;
         
-        push @observation, GetTimeOfDay($raw[$i][0]);
-        push @observation, GetTimeOfWeek($raw[$i][0]);
-        push @observation, GetTimeOfYear($raw[$i][0]);
-        
         #push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);
         
         #good 94
@@ -126,28 +122,101 @@ sub GetObservations
         #push(@observation, ((($raw[$i][4] - $raw[$i - 4][1]) / $raw[$i - 4][1]) / 2) + .5); # Relative delta in open/close for current event n-1 ((c - o)/o)/2+.5
         #push(@observation, ((($raw[$i][4] - $raw[$i - 5][1]) / $raw[$i - 5][1]) / 2) + .5); # Relative delta in open/close for current event n-1 ((c - o)/o)/2+.5
         
-        push @observation, GetDelta($raw[$i][4], $raw[$i][1]);
+        #push @observation, GetDelta($raw[$i - 1][4], $raw[$i - 1][1]);
+        #push @observation, GetDelta($raw[$i - 2][4], $raw[$i - 2][1]);
+        #push @observation, GetDelta($raw[$i - 3][4], $raw[$i - 3][1]);
+        #push @observation, GetDelta($raw[$i - 4][4], $raw[$i - 4][1]);
+        #push @observation, GetDelta($raw[$i - 5][4], $raw[$i - 5][1]);
         
-        push @observation, GetDelta($raw[$i - 1][4], $raw[$i - 1][1]);
-        push @observation, GetDelta($raw[$i - 2][4], $raw[$i - 2][1]);
-        push @observation, GetDelta($raw[$i - 3][4], $raw[$i - 3][1]);
-        push @observation, GetDelta($raw[$i - 4][4], $raw[$i - 4][1]);
-        push @observation, GetDelta($raw[$i - 5][4], $raw[$i - 5][1]);
+        #push @observation, GetDelta($raw[$i][4], $raw[$i - 1][1]);  
+        #push @observation, GetDelta($raw[$i][4], $raw[$i - 2][1]);  
+        #push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);  
+        #push @observation, GetDelta($raw[$i][4], $raw[$i - 4][1]);  
+        #push @observation, GetDelta($raw[$i][4], $raw[$i - 5][1]);  
         
-        push @observation, GetDelta($raw[$i][4], $raw[$i - 1][1]);  
-        push @observation, GetDelta($raw[$i][4], $raw[$i - 2][1]);  
-        push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);  
-        push @observation, GetDelta($raw[$i][4], $raw[$i - 4][1]);  
-        push @observation, GetDelta($raw[$i][4], $raw[$i - 5][1]);  
+        # top 5 winners
+        # d=4 1 2 7 9
+        # d=4 1 2 7 8
+        # d=5 0 1 2 7 8
+        # d=5 0 1 2 7 8 9
+        push @observation, GetTimeOfDay($raw[$i][0]); # 0
+        push @observation, GetDelta($raw[$i][4], $raw[$i][1]); # 1
+        push @observation, GetDelta($raw[$i][2], $raw[$i][3]); # 2
+        push @observation, GetDelta($raw[$i - 5][2], $raw[$i - 5][3]); # 7
+        push @observation, GetDelta($raw[$i][1], $raw[$g_observationDepth][1]); # 8
+        push @observation, GetDelta($raw[$i][4], $raw[$g_observationDepth][4]); # 9
+        # d=5 0 1 2 7 9
         
-        #push @observation, GetDelta($raw[$i][1], $raw[$g_observationDepth][1]);
+        #XX 0 : 1659
+        # 1 : 1321
+        # 2 : 1342
+        #push @observation, GetTimeOfDay($raw[$i][0]); # 0
+        #push @observation, GetTimeOfWeek($raw[$i][0]);
+        #push @observation, GetTimeOfYear($raw[$i][0]);
+        
+        #XX 3 : 19313
+        #XX 4 : 2850
+        # 5 : 712
+        #XX 6 : 1624
+        # 7 : 1087
+        #XX 8 : 1804
+        # 9 : 572
+        #XX 10 : 1631
+        # 11 : 645
+        #XX 12 : 1770
+        # 13 : 563
+        #XX 14 : 1828
+        #push @observation, GetDelta($raw[$i][4], $raw[$i][1]); # 1
+        #push @observation, GetDelta($raw[$i][2], $raw[$i][3]); # 2
+        #push @observation, GetDelta($raw[$i - 1][4], $raw[$i - 1][1]);
+        #push @observation, GetDelta($raw[$i - 1][2], $raw[$i - 1][3]); # 3
+        #push @observation, GetDelta($raw[$i - 2][4], $raw[$i - 2][1]);
+        #push @observation, GetDelta($raw[$i - 2][2], $raw[$i - 2][3]); # 4
+        #push @observation, GetDelta($raw[$i - 3][4], $raw[$i - 3][1]);
+        #push @observation, GetDelta($raw[$i - 3][2], $raw[$i - 3][3]); # 5
+        #push @observation, GetDelta($raw[$i - 4][4], $raw[$i - 4][1]);
+        #push @observation, GetDelta($raw[$i - 4][2], $raw[$i - 4][3]); # 6
+        #push @observation, GetDelta($raw[$i - 5][4], $raw[$i - 5][1]);
+        #push @observation, GetDelta($raw[$i - 5][2], $raw[$i - 5][3]); # 7
+        
+        #XX 15 : 1974
+        # 16 : 1363
+        # 17 : 1366
+        #XX 18 : 1968
+        # 19 : 1303
+        #push @observation, GetDelta($raw[$i][1], $raw[$g_observationDepth][1]); # 8
         #push @observation, GetDelta($raw[$i][2], $raw[$g_observationDepth][2]);
         #push @observation, GetDelta($raw[$i][3], $raw[$g_observationDepth][3]);
-        #push @observation, GetDelta($raw[$i][4], $raw[$g_observationDepth][4]);
+        #push @observation, GetDelta($raw[$i][4], $raw[$g_observationDepth][4]); # 9
         #push @observation, GetDelta($raw[$i][5], $raw[$g_observationDepth][5]);
         
         for(my $j = 1; $j <= $g_observationDepth; $j++)
         {
+            # 20 : 73
+            # 21 : 8
+            # 22 : 13
+            # 23 : 1240
+            # 24 : 146
+            # 25 : 19
+            # 26 : 46
+            # 27 : 86
+            # 28 : 1023
+            # 29 : 672
+            # 30 : 308
+            # 31 : 366
+            # 32 : 214
+            # 33 : 1707
+            # 34 : 574
+            # 35 : 572
+            # 36 : 853
+            # 37 : 742
+            # 38 : 2044
+            # 39 : 434
+            # 40 : 550
+            # 41 : 728
+            # 42 : 591
+            # 43 : 1891
+            # 44 : 641
             #push @observation, GetDelta($raw[$i][1], $raw[$i - $j][1]);
             #push @observation, GetDelta($raw[$i][2], $raw[$i - $j][2]);
             #push @observation, GetDelta($raw[$i][3], $raw[$i - $j][3]);
@@ -157,6 +226,31 @@ sub GetObservations
         
         for(my $j = 0; $j < $g_observationDepth; $j++)
         {
+            # 45 : 73
+            # 46 : 8
+            # 47 : 13
+            # 48 : 867
+            # 49 : 146
+            # 50 : 1292
+            # 51 : 1111
+            # 52 : 1303
+            # 53 : 1220
+            # 54 : 1139
+            # 55 : 1097
+            # 56 : 838
+            # 57 : 698
+            # 58 : 659
+            # 59 : 908
+            # 60 : 678
+            # 61 : 502
+            # 62 : 368
+            # 63 : 1224
+            # 64 : 931
+            # 65 : 1045
+            # 66 : 564
+            # 67 : 979
+            # 68 : 1341
+            # 69 : 980
             #push @observation, GetDelta($raw[$i - $j][1], $raw[$i - $j - 1][1]);
             #push @observation, GetDelta($raw[$i - $j][2], $raw[$i - $j - 1][2]);
             #push @observation, GetDelta($raw[$i - $j][3], $raw[$i - $j - 1][3]);

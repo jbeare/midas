@@ -23,12 +23,13 @@ public:
         }
     };
 
-    static FeatureSpec FindFeatures(
+    static std::vector<FeatureSpec> FindFeatures(
         _In_ const arma::mat& data,
         _In_ const arma::Row<size_t>& labels,
         _In_ const arma::mat& testRawData,
         _In_ const arma::mat& testData,
-        _In_ const arma::Row<size_t>& testLabels)
+        _In_ const arma::Row<size_t>& testLabels,
+        _In_ uint32_t maxDimensions)
     {
         std::vector<std::thread> threads;
         std::vector<uint32_t> v;
@@ -39,7 +40,7 @@ public:
             v.push_back(i);
         }
 
-        for (int i = 1; i < data.n_rows; i++)
+        for (int i = 1; (i <= data.n_rows) && (i <= maxDimensions); i++)
         {
             do
             {
@@ -50,7 +51,7 @@ public:
                     t.insert_rows(t.n_rows, testData.row(v[j]));
                 }
 
-                for (int k = 1; k <= d.n_rows; k++)
+                for (int k = 1; (k <= d.n_rows) && (k <= maxDimensions); k++)
                 {
                     /*printf("d=%d ", k);
                     for (auto& e : v)
@@ -84,7 +85,7 @@ public:
         }
 
         std::sort(m_specs.begin(), m_specs.end());
-        return m_specs.back();
+        return m_specs;
     }
 
     static void _FindFeatures(
@@ -99,8 +100,11 @@ public:
         Midas::Classifier c(data, labels, dimensions, 8);
         auto testResults = c.Classify(testData);
         auto score = Analyze(testRawData, testLabels, testResults);
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_specs.push_back(FeatureSpec{ score, features, dimensions });
+        if (score > 65)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_specs.push_back(FeatureSpec{ score, features, dimensions });
+        }
     }
 
     static float Analyze(const arma::mat& data, const arma::Row<size_t>& labels, const arma::Row<size_t>& results)
@@ -121,18 +125,32 @@ public:
         int correct{};
         int under{};
         int over{};
+        float loss{};
+        int trades{};
+        int goodTrades{};
+        int opportunities{};
+        int lossOnBadTrade{};
+        int gainOnBadTrade{};
 
         for (int i = 1; i < data.n_rows - 1; i++)
         {
+            auto d0 = data.row(i);
+            auto d1 = data.row(i + 1);
             labelSpread[labels[i]]++;
             resultSpread[results[i]]++;
+            if (labels[i] > 0)
+            {
+                opportunities++;
+            }
 
             if (labels[i] == results[i]) // We classified the data correctly.
             {
                 // Gain profit equal to the classification.
-                if (labels[i] > 0)
+                if (results[i] > 0)
                 {
                     actGain[results[i]]++;
+                    trades++;
+                    goodTrades++;
                 }
                 correct++;
                 correctSpread[results[i]]++;
@@ -140,16 +158,31 @@ public:
             else if (labels[i] > results[i]) // We underestimated the classification.
             {
                 // Gain profit equal to the under-classification.
-                if (labels[i] > 0)
+                if (results[i] > 0)
                 {
                     actGain[results[i]]++;
+                    trades++;
+                    goodTrades++;
                 }
                 under++;
                 underSpread[labels[i] - results[i]]++;
             }
             else // We overestimated the classification.
             {
-                // It's a wash.
+                // We gain/lose.
+                if (results[i] > 0)
+                {
+                    loss += d1[4] - d0[4];
+                    trades++;
+                    if ((d1[4] - d0[4]) > 0)
+                    {
+                        gainOnBadTrade++;
+                    }
+                    else
+                    {
+                        lossOnBadTrade++;
+                    }
+                }
                 over++;
                 overSpread[results[i] - labels[i]]++;
             }
@@ -181,14 +214,16 @@ public:
 
         int c = correct;
         int r = data.n_rows;
-        /*printf("Accuracy +/-0:%d/%d(%.2f) +/-1:%d/%d(%.2f) +/-2:%d/%d(%.2f) +/-3:%d/%d(%.2f) +/-4:%d/%d(%.2f)\n",
+        printf("Accuracy +/-0:%d/%d(%.2f) +/-1:%d/%d(%.2f) +/-2:%d/%d(%.2f) +/-3:%d/%d(%.2f) +/-4:%d/%d(%.2f)\n",
             c, r, (float)c / r,
             c + underSpread[1] + overSpread[1], r, ((float)c + underSpread[1] + overSpread[1]) / r,
             c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2]) / r,
             c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3]) / r,
             c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4]) / r);
 
-        printf("Gain %f/%f\n", actGainTotal, maxGainTotal);
+        printf("Gain %f/%f           Gain/Loss on over-classification %f\n", actGainTotal, maxGainTotal, loss);
+        printf("Trade/Opp %d/%d Good/Opp %d/%d Bad Gain/Loss %d/%d\n",
+            trades, opportunities, goodTrades, opportunities, gainOnBadTrade, lossOnBadTrade);
 
         printf("     .005     |      .01      |      .05      |      .10      |      .15      |      .20      |      .25\n");
         printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n\n",
@@ -198,7 +233,7 @@ public:
             actGain[4], maxGain[4],
             actGain[5], maxGain[5],
             actGain[6], maxGain[6],
-            actGain[7], maxGain[7]);*/
+            actGain[7], maxGain[7]);
 
         return actGainTotal;
     }
