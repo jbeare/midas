@@ -4,6 +4,7 @@ use warnings;
 use Data::Dumper qw(Dumper);
 use File::Basename;
 use Getopt::Long;
+use Time::Piece;
 
 my $g_inputPath = "";
 my $g_observationDepth = 5;
@@ -27,17 +28,26 @@ sub ParseInputFile
 
 sub GetTimeOfDay
 {
-
+    # This does not take into account timezones.
+    my $timestamp = shift;
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($timestamp);
+    return ($sec + ($min * 60) + ($hour * 3600)) / 86400;
 }
 
 sub GetTimeOfWeek
 {
-
+    # This does not take into account timezones.
+    my $timestamp = shift;
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($timestamp);
+    return ($min + ($hour * 60) + ($wday * 1440)) / 10080;
 }
 
 sub GetTimeOfYear
 {
-
+    # This does not take into account timezones.
+    my $timestamp = shift;
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($timestamp);
+    return $yday / 365;
 }
 
 sub GetDelta
@@ -85,6 +95,10 @@ sub GetObservations
     {
         my @observation;
         
+        push @observation, GetTimeOfDay($raw[$i][0]);
+        push @observation, GetTimeOfWeek($raw[$i][0]);
+        push @observation, GetTimeOfYear($raw[$i][0]);
+        
         #push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);
         
         #good 94
@@ -125,10 +139,6 @@ sub GetObservations
         push @observation, GetDelta($raw[$i][4], $raw[$i - 3][1]);  
         push @observation, GetDelta($raw[$i][4], $raw[$i - 4][1]);  
         push @observation, GetDelta($raw[$i][4], $raw[$i - 5][1]);  
-
-        #push @observation, GetTimeOfDay($raw[$i][0]);
-        #push @observation, GetTimeOfWeek($raw[$i][0]);
-        #push @observation, GetTimeOfYear($raw[$i][0]);
         
         #push @observation, GetDelta($raw[$i][1], $raw[$g_observationDepth][1]);
         #push @observation, GetDelta($raw[$i][2], $raw[$g_observationDepth][2]);

@@ -6,7 +6,6 @@
 #include <mlpack/methods/pca/pca.hpp>
 #include <sal.h>
 #include <string>
-#include <stdint.h>
 
 #define THROW_IF_FAILED_BOOL(cond) {if(!cond){throw std::exception();}}
 
@@ -20,6 +19,11 @@ public:
         _In_ const arma::mat& data,
         _In_ uint32_t maxDimensions)
     {
+        if (maxDimensions == 0)
+        {
+            return data;
+        }
+
         arma::vec rowMean = arma::sum(data, 1) / data.n_cols;
         arma::mat centeredData = data - arma::repmat(rowMean, 1, data.n_cols);
 

@@ -1,0 +1,212 @@
+#pragma once
+
+#include <mlpack/core/arma_extend/arma_extend.hpp>
+#include <mlpack/core/util/arma_traits.hpp>
+#include <sal.h>
+#include <vector>
+#include <mutex>
+#include <thread>
+#include "Combination.h"
+
+class FeatureFinder
+{
+public:
+    struct FeatureSpec
+    {
+        float Gain{};
+        std::vector<uint32_t> Features;
+        uint32_t Dimensions;
+
+        bool operator<(const FeatureSpec& f)
+        {
+            return (Gain > f.Gain) ? true : false;
+        }
+    };
+
+    static FeatureSpec FindFeatures(
+        _In_ const arma::mat& data,
+        _In_ const arma::Row<size_t>& labels,
+        _In_ const arma::mat& testRawData,
+        _In_ const arma::mat& testData,
+        _In_ const arma::Row<size_t>& testLabels)
+    {
+        std::vector<std::thread> threads;
+        std::vector<uint32_t> v;
+        m_specs.clear();
+
+        for (int i = 0; i < data.n_rows; i++)
+        {
+            v.push_back(i);
+        }
+
+        for (int i = 1; i < data.n_rows; i++)
+        {
+            do
+            {
+                arma::mat d, t;
+                for (int j = 0; j < i; j++)
+                {
+                    d.insert_rows(d.n_rows, data.row(v[j]));
+                    t.insert_rows(t.n_rows, testData.row(v[j]));
+                }
+
+                for (int k = 1; k <= d.n_rows; k++)
+                {
+                    /*printf("d=%d ", k);
+                    for (auto& e : v)
+                    {
+                        std::cout << e << " ";
+                    }
+                    std::cout << endl;*/
+
+                    if (threads.size() >= 4)
+                    {
+                        for (auto& th : threads)
+                        {
+                            th.join();
+                        }
+                        threads.clear();
+                    }
+
+                    threads.push_back(std::thread(_FindFeatures, d, labels, testRawData, t, testLabels, k, std::vector<uint32_t>{v.begin(), v.begin() + i}));
+
+                    //Midas::Classifier c(d, labels, k, 8);
+                    //auto results = c.Classify(d);
+                    //s.push_back(FeatureSpec{ Analyze(rawData, labels, results), v, k });
+                }
+
+            } while (next_combination(v.begin(), v.begin() + i, v.end()));
+        }
+
+        for (auto& th : threads)
+        {
+            th.join();
+        }
+
+        std::sort(m_specs.begin(), m_specs.end());
+        return m_specs.back();
+    }
+
+    static void _FindFeatures(
+        _In_ const arma::mat& data,
+        _In_ const arma::Row<size_t>& labels,
+        _In_ const arma::mat& testRawData,
+        _In_ const arma::mat& testData,
+        _In_ const arma::Row<size_t>& testLabels,
+        _In_ uint32_t dimensions,
+        _In_ std::vector<uint32_t> features)
+    {
+        Midas::Classifier c(data, labels, dimensions, 8);
+        auto testResults = c.Classify(testData);
+        auto score = Analyze(testRawData, testLabels, testResults);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_specs.push_back(FeatureSpec{ score, features, dimensions });
+    }
+
+    static float Analyze(const arma::mat& data, const arma::Row<size_t>& labels, const arma::Row<size_t>& results)
+    {
+        if ((data.n_rows != labels.n_cols) || (results.n_cols != labels.n_cols) || (results.n_rows != labels.n_rows))
+        {
+            printf("Data error!\n");
+            return 0;
+        }
+
+        float maxGain[8] = {};
+        float actGain[8] = {};
+        int labelSpread[8]{};
+        int resultSpread[8]{};
+        int correctSpread[8]{};
+        int underSpread[8]{};
+        int overSpread[8]{};
+        int correct{};
+        int under{};
+        int over{};
+
+        for (int i = 1; i < data.n_rows - 1; i++)
+        {
+            labelSpread[labels[i]]++;
+            resultSpread[results[i]]++;
+
+            if (labels[i] == results[i]) // We classified the data correctly.
+            {
+                // Gain profit equal to the classification.
+                if (labels[i] > 0)
+                {
+                    actGain[results[i]]++;
+                }
+                correct++;
+                correctSpread[results[i]]++;
+            }
+            else if (labels[i] > results[i]) // We underestimated the classification.
+            {
+                // Gain profit equal to the under-classification.
+                if (labels[i] > 0)
+                {
+                    actGain[results[i]]++;
+                }
+                under++;
+                underSpread[labels[i] - results[i]]++;
+            }
+            else // We overestimated the classification.
+            {
+                // It's a wash.
+                over++;
+                overSpread[results[i] - labels[i]]++;
+            }
+        }
+
+        maxGain[0] = labelSpread[0] * 0;
+        maxGain[1] = labelSpread[1] * 0.005;
+        maxGain[2] = labelSpread[2] * 0.01;
+        maxGain[3] = labelSpread[3] * 0.05;
+        maxGain[4] = labelSpread[4] * 0.10;
+        maxGain[5] = labelSpread[5] * 0.15;
+        maxGain[6] = labelSpread[6] * 0.20;
+        maxGain[7] = labelSpread[7] * 0.25;
+        float maxGainTotal = maxGain[0] + maxGain[1] + maxGain[2] + maxGain[3] + maxGain[4] + maxGain[5] + maxGain[6] + maxGain[7];
+
+        actGain[0] = actGain[0] * 0;
+        actGain[1] = actGain[1] * 0.005;
+        actGain[2] = actGain[2] * 0.01;
+        actGain[3] = actGain[3] * 0.05;
+        actGain[4] = actGain[4] * 0.10;
+        actGain[5] = actGain[5] * 0.15;
+        actGain[6] = actGain[6] * 0.20;
+        actGain[7] = actGain[7] * 0.25;
+        float actGainTotal = actGain[0] + actGain[1] + actGain[2] + actGain[3] + actGain[4] + actGain[5] + actGain[6] + actGain[7];
+
+        // Accuracy (spot on, over, under)
+        // Oppourtunities taken (taken chances/total chances, correct changes/total chances)
+        // Gainz (actual gain / max gain)
+
+        int c = correct;
+        int r = data.n_rows;
+        /*printf("Accuracy +/-0:%d/%d(%.2f) +/-1:%d/%d(%.2f) +/-2:%d/%d(%.2f) +/-3:%d/%d(%.2f) +/-4:%d/%d(%.2f)\n",
+            c, r, (float)c / r,
+            c + underSpread[1] + overSpread[1], r, ((float)c + underSpread[1] + overSpread[1]) / r,
+            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2]) / r,
+            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3]) / r,
+            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4]) / r);
+
+        printf("Gain %f/%f\n", actGainTotal, maxGainTotal);
+
+        printf("     .005     |      .01      |      .05      |      .10      |      .15      |      .20      |      .25\n");
+        printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n\n",
+            actGain[1], maxGain[1],
+            actGain[2], maxGain[2],
+            actGain[3], maxGain[3],
+            actGain[4], maxGain[4],
+            actGain[5], maxGain[5],
+            actGain[6], maxGain[6],
+            actGain[7], maxGain[7]);*/
+
+        return actGainTotal;
+    }
+
+private:
+    static std::mutex m_mutex;
+    static std::vector<FeatureSpec> m_specs;
+};
+
+std::mutex FeatureFinder::m_mutex{};
+std::vector<FeatureFinder::FeatureSpec> FeatureFinder::m_specs{};

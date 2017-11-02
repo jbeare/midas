@@ -26,5 +26,11 @@
     <ClInclude Include="Classifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FeatureFinder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Combination.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
