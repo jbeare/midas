@@ -13,7 +13,7 @@ class FeatureFinder
 public:
     struct FeatureSpec
     {
-        float Gain{};
+        double Gain{};
         std::vector<uint32_t> Features;
         uint32_t Dimensions;
 
@@ -40,18 +40,18 @@ public:
             v.push_back(i);
         }
 
-        for (int i = 1; (i <= data.n_rows) && (i <= maxDimensions); i++)
+        for (uint32_t i = 1; (i <= data.n_rows) && (i <= maxDimensions); i++)
         {
             do
             {
                 arma::mat d, t;
-                for (int j = 0; j < i; j++)
+                for (uint32_t j = 0; j < i; j++)
                 {
                     d.insert_rows(d.n_rows, data.row(v[j]));
                     t.insert_rows(t.n_rows, testData.row(v[j]));
                 }
 
-                for (int k = 1; (k <= d.n_rows) && (k <= maxDimensions); k++)
+                for (uint32_t k = 1; (k <= d.n_rows) && (k <= maxDimensions); k++)
                 {
                     /*printf("d=%d ", k);
                     for (auto& e : v)
@@ -107,7 +107,7 @@ public:
         }
     }
 
-    static float Analyze(const arma::mat& data, const arma::Row<size_t>& labels, const arma::Row<size_t>& results)
+    static double Analyze(const arma::mat& data, const arma::Row<size_t>& labels, const arma::Row<size_t>& results)
     {
         if ((data.n_rows != labels.n_cols) || (results.n_cols != labels.n_cols) || (results.n_rows != labels.n_rows))
         {
@@ -115,8 +115,8 @@ public:
             return 0;
         }
 
-        float maxGain[8] = {};
-        float actGain[8] = {};
+        double maxGain[8] = {};
+        double actGain[8] = {};
         int labelSpread[8]{};
         int resultSpread[8]{};
         int correctSpread[8]{};
@@ -125,7 +125,7 @@ public:
         int correct{};
         int under{};
         int over{};
-        float loss{};
+        double loss{};
         int trades{};
         int goodTrades{};
         int opportunities{};
@@ -196,7 +196,7 @@ public:
         maxGain[5] = labelSpread[5] * 0.15;
         maxGain[6] = labelSpread[6] * 0.20;
         maxGain[7] = labelSpread[7] * 0.25;
-        float maxGainTotal = maxGain[0] + maxGain[1] + maxGain[2] + maxGain[3] + maxGain[4] + maxGain[5] + maxGain[6] + maxGain[7];
+        double maxGainTotal = maxGain[0] + maxGain[1] + maxGain[2] + maxGain[3] + maxGain[4] + maxGain[5] + maxGain[6] + maxGain[7];
 
         actGain[0] = actGain[0] * 0;
         actGain[1] = actGain[1] * 0.005;
@@ -206,22 +206,22 @@ public:
         actGain[5] = actGain[5] * 0.15;
         actGain[6] = actGain[6] * 0.20;
         actGain[7] = actGain[7] * 0.25;
-        float actGainTotal = actGain[0] + actGain[1] + actGain[2] + actGain[3] + actGain[4] + actGain[5] + actGain[6] + actGain[7];
+        double actGainTotal = actGain[0] + actGain[1] + actGain[2] + actGain[3] + actGain[4] + actGain[5] + actGain[6] + actGain[7];
 
         // Accuracy (spot on, over, under)
         // Oppourtunities taken (taken chances/total chances, correct changes/total chances)
         // Gainz (actual gain / max gain)
 
-        int c = correct;
-        int r = data.n_rows;
-        printf("Accuracy +/-0:%d/%d(%.2f) +/-1:%d/%d(%.2f) +/-2:%d/%d(%.2f) +/-3:%d/%d(%.2f) +/-4:%d/%d(%.2f)\n",
-            c, r, (float)c / r,
-            c + underSpread[1] + overSpread[1], r, ((float)c + underSpread[1] + overSpread[1]) / r,
-            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2]) / r,
-            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3]) / r,
-            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4], r, ((float)c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4]) / r);
+        double c = correct;
+        auto r = data.n_rows;
+        printf("Accuracy +/-0:%.f/%llu(%.2f) +/-1:%.f/%llu(%.2f) +/-2:%.f/%llu(%.2f) +/-3:%.f/%llu(%.2f) +/-4:%.f/%llu(%.2f)\n",
+            c, r, c / r,
+            c + underSpread[1] + overSpread[1], r, (c + underSpread[1] + overSpread[1]) / r,
+            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2]) / r,
+            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3]) / r,
+            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4]) / r);
 
-        printf("Gain %f/%f           Gain/Loss on over-classification %f\n", actGainTotal, maxGainTotal, loss);
+        printf("Gain %.2f/%.2f           Gain/Loss on over-classification %.2f\n", actGainTotal, maxGainTotal, loss);
         printf("Trade/Opp %d/%d Good/Opp %d/%d Bad Gain/Loss %d/%d\n",
             trades, opportunities, goodTrades, opportunities, gainOnBadTrade, lossOnBadTrade);
 

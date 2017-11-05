@@ -5,7 +5,7 @@
 template<typename Value, typename Iterator>
 void disjoint_rotate(Iterator begin1, Iterator end1, size_t size1,
     Iterator begin2, Iterator end2, size_t size2,
-    Value *type) {
+    Value /**type*/) {
     const size_t total = size1 + size2;
     size_t gcd = total;
     for (size_t div = size1; div != 0; ) {
@@ -16,7 +16,7 @@ void disjoint_rotate(Iterator begin1, Iterator end1, size_t size1,
     for (size_t i = 0; i < gcd; ++i) {
         Iterator curr((i < size1) ? begin1 + i : begin2 + (i - size1));
         size_t ctr = i;
-        const Value v(*curr);
+        const auto v(*curr);
         for (size_t j = 0; j < skip; ++j) {
             ctr = (ctr + size1) % total;
             Iterator next((ctr < size1) ? begin1 + ctr : begin2 + (ctr - size1));

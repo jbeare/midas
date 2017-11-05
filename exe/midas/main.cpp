@@ -1,15 +1,21 @@
+
+#pragma warning(disable : 4348 4267 4244 4458)
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/naive_bayes/naive_bayes_classifier.hpp>
 #include <mlpack/methods/pca/pca.hpp>
 #include <map>
+
+#pragma warning(default : 4348 4267 4244 4458)
+
 #include "Classifier.h"
 #include "FeatureFinder.h"
 
 using namespace mlpack;
 
-int main(int argc, char** argv)
+int main(int /*argc*/, char** /*argv*/)
 {
     while (1)
     {

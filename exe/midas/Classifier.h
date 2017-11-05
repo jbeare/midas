@@ -17,14 +17,14 @@ class Pca : public std::enable_shared_from_this<Pca>
 public:
     arma::mat Transform(
         _In_ const arma::mat& data,
-        _In_ uint32_t maxDimensions)
+        _In_ size_t maxDimensions)
     {
         if (maxDimensions == 0)
         {
             return data;
         }
 
-        arma::vec rowMean = arma::sum(data, 1) / data.n_cols;
+        arma::vec rowMean = arma::sum(data, 1) / (uint32_t)data.n_cols;
         arma::mat centeredData = data - arma::repmat(rowMean, 1, data.n_cols);
 
         if (m_eigenVectors.is_empty())
