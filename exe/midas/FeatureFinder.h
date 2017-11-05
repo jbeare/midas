@@ -35,7 +35,7 @@ public:
         std::vector<uint32_t> v;
         m_specs.clear();
 
-        for (int i = 0; i < data.n_rows; i++)
+        for (uint32_t i = 0; i < data.n_rows; i++)
         {
             v.push_back(i);
         }
@@ -132,7 +132,7 @@ public:
         int lossOnBadTrade{};
         int gainOnBadTrade{};
 
-        for (int i = 1; i < data.n_rows - 1; i++)
+        for (uint32_t i = 1; i < data.n_rows - 1; i++)
         {
             auto d0 = data.row(i);
             auto d1 = data.row(i + 1);
@@ -213,7 +213,7 @@ public:
         // Gainz (actual gain / max gain)
 
         double c = correct;
-        auto r = data.n_rows;
+        uint64_t r = (uint64_t)data.n_rows;
         printf("Accuracy +/-0:%.f/%llu(%.2f) +/-1:%.f/%llu(%.2f) +/-2:%.f/%llu(%.2f) +/-3:%.f/%llu(%.2f) +/-4:%.f/%llu(%.2f)\n",
             c, r, c / r,
             c + underSpread[1] + overSpread[1], r, (c + underSpread[1] + overSpread[1]) / r,

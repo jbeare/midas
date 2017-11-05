@@ -17,7 +17,7 @@ class Pca : public std::enable_shared_from_this<Pca>
 public:
     arma::mat Transform(
         _In_ const arma::mat& data,
-        _In_ size_t maxDimensions)
+        _In_ uint32_t maxDimensions)
     {
         if (maxDimensions == 0)
         {
@@ -60,7 +60,7 @@ public:
     Classifier(
         _In_ const arma::mat& data,
         _In_ const arma::Row<size_t>& labels,
-        _In_ const size_t dimensions,
+        _In_ const uint32_t dimensions,
         _In_ const size_t classes) :
         m_dimensions(dimensions),
         m_pca(),
@@ -89,7 +89,7 @@ public:
     }
 
 private:
-    size_t m_dimensions;
+    uint32_t m_dimensions;
     Pca m_pca;
     mlpack::naive_bayes::NaiveBayesClassifier<> m_nbc;
     

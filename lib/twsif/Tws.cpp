@@ -14,19 +14,40 @@ Tws::~Tws()
 
 }
 
-bool Tws::Connect(const std::string /*host*/, uint32_t /*port*/, int32_t /*clientId*/)
+bool Tws::Connect(const std::string host, uint32_t port, int32_t clientId)
 {
-    return true;
+    printf("Connecting to %s:%d clientId:%d\n", !host.empty() ? "127.0.0.1" : host, port, clientId);
+
+    bool res = m_client->eConnect(host.c_str(), port, clientId);
+
+    if (res)
+    {
+        printf("Connected to %s:%d clientId:%d\n", m_client->host().c_str(), m_client->port(), clientId);
+        m_reader.reset(new EReader(m_client.get(), &m_osSignal));
+        m_reader->start();
+    }
+    else
+    {
+        printf("Cannot connect to %s:%d clientId:%d\n", m_client->host().c_str(), m_client->port(), clientId);
+    }
+
+    return res;
 }
 
 void Tws::Disconnect() const
 {
-
+    m_client->eDisconnect();
+    printf("Disconnected\n");
 }
 
 bool Tws::IsConnected() const
 {
-    return true;
+    return m_client->isConnected();
+}
+
+void Tws::SetConnectOptions(const std::string& connectOptions)
+{
+    m_client->setConnectOptions(connectOptions);
 }
 
 void Tws::tickPrice(TickerId /*tickerId*/, TickType /*field*/, double /*price*/, int /*canAutoExecute*/) {}

@@ -12,6 +12,7 @@
 #define TWSAPIDLLEXP
 
 #include <EWrapper.h>
+#include <EReader.h>
 #include <EReaderOSSignal.h>
 
 class EClientSocket;
@@ -25,6 +26,7 @@ public:
     bool Connect(const std::string host, uint32_t port, int32_t clientId = 0);
     void Disconnect() const;
     bool IsConnected() const;
+    void SetConnectOptions(const std::string& connectOptions);
 
 private:
 #pragma region EWrapper
@@ -88,4 +90,5 @@ private:
 
     EReaderOSSignal m_osSignal;
     const std::unique_ptr<EClientSocket> m_client;
+    std::unique_ptr<EReader> m_reader;
 };
