@@ -11,7 +11,7 @@ namespace mlib_test
 	{
 	public:
 		
-		TEST_METHOD(Construction)
+		TEST_METHOD(UniqueHandleTest_Construction)
 		{
             auto h1 = UniqueHandle(INVALID_HANDLE_VALUE);
             auto h2 = UniqueEvent(nullptr, false, false, nullptr);
@@ -27,7 +27,7 @@ namespace mlib_test
             Assert::AreEqual(h2.Get(), INVALID_HANDLE_VALUE);
 		}
 
-        TEST_METHOD(Events)
+        TEST_METHOD(UniqueHandleTest_Events)
         {
             auto h1 = UniqueEvent(nullptr, false, false, nullptr);
             auto h2 = UniqueEvent(nullptr, true, false, nullptr);
@@ -55,7 +55,7 @@ namespace mlib_test
             Assert::IsTrue(h2.Wait(0));
         }
 
-        TEST_METHOD(Exceptions)
+        TEST_METHOD(UniqueHandleTest_Exceptions)
         {
             auto h1 = UniqueEvent(nullptr);
             Assert::ExpectException<MLibException>([&]() { h1.Set(); });

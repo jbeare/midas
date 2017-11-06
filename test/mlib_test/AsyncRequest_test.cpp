@@ -11,13 +11,13 @@ namespace mlib_test
     {
     public:
 
-        TEST_METHOD(Construction)
+        TEST_METHOD(AsyncRequestTest_Construction)
         {
             auto req1 = AsyncRequest<int>::MakeShared();
             auto req2 = AsyncRequest<int>::MakeShared([]() -> bool { return true; });
         }
 
-        TEST_METHOD(Completion)
+        TEST_METHOD(AsyncRequestTest_Completion)
         {
             auto req1 = AsyncRequest<int>::MakeShared();
             auto res1 = req1->GetAsyncResult();
@@ -27,7 +27,7 @@ namespace mlib_test
             Assert::AreEqual(res1->GetResultSync(), 1);
         }
 
-        TEST_METHOD(CompletionRoutine)
+        TEST_METHOD(AsyncRequestTest_CompletionRoutine)
         {
             auto req1 = AsyncRequest<int>::MakeShared();
             auto res1 = req1->GetAsyncResult();
@@ -47,7 +47,7 @@ namespace mlib_test
             Assert::AreEqual(result, 2);
         }
 
-        TEST_METHOD(Cancellation)
+        TEST_METHOD(AsyncRequestTest_Cancellation)
         {
             bool cancelled{false};
             auto req1 = AsyncRequest<int>::MakeShared([&]() -> bool { cancelled = true; return cancelled; });
@@ -67,16 +67,15 @@ namespace mlib_test
             Assert::AreEqual(res2->GetResultSync(), 2);
         }
 
-        TEST_METHOD(Exceptions)
+        TEST_METHOD(AsyncRequestTest_Exceptions)
         {
-            
             auto req1 = AsyncRequest<int>::MakeShared();
             auto res1 = req1->GetAsyncResult();
             int result{0};
 
             Assert::ExpectException<MLibException>([&]() { res1->GetResult(); });
             res1->SetCompletionRoutine([&](int r) { result = r; });
-            Assert::ExpectException<MLibException>([&]() { res1->SetCompletionRoutine([](int r) {}); });
+            Assert::ExpectException<MLibException>([&]() { res1->SetCompletionRoutine([](int) {}); });
 
             req1->SetResult(1);
             Assert::ExpectException<MLibException>([&]() { req1->SetResult(1); });
