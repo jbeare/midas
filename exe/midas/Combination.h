@@ -3,8 +3,8 @@
 #include <algorithm>
 
 template<typename Value, typename Iterator>
-void disjoint_rotate(Iterator begin1, Iterator end1, size_t size1,
-    Iterator begin2, Iterator end2, size_t size2,
+void disjoint_rotate(Iterator begin1, Iterator /*end1*/, size_t size1,
+    Iterator begin2, Iterator /*end2*/, size_t size2,
     Value /**type*/) {
     const size_t total = size1 + size2;
     size_t gcd = total;

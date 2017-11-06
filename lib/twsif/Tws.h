@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <map>
 
 #define IB_WIN32
 #define TWSAPIDLLEXP
@@ -14,6 +15,17 @@
 #include <EWrapper.h>
 #include <EReader.h>
 #include <EReaderOSSignal.h>
+
+#include <AsyncRequest.h>
+
+namespace std
+{
+    template<typename K, typename V>
+    bool key_exists(map<K, V> m, K k)
+    {
+        return m.find(k) != m.end();
+    }
+}
 
 class EClientSocket;
 
@@ -23,12 +35,25 @@ public:
     Tws();
     ~Tws();
 
-    bool Connect(const std::string host, uint32_t port, int32_t clientId = 0);
+    bool Connect(_In_ const std::string host, _In_ uint32_t port, _In_ int32_t clientId = 0);
     void Disconnect() const;
     bool IsConnected() const;
-    void SetConnectOptions(const std::string& connectOptions);
+    void SetConnectOptions(_In_ const std::string& connectOptions);
+
+    int GetNextRequestId();
+
+    typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> AccountSummary;
+    typedef std::map<int, std::pair<std::shared_ptr<AsyncRequest<AccountSummary>>, AccountSummary>> AccountSummaryMap;
+    std::shared_ptr<AsyncResult<AccountSummary>> RequestAccountSummary(_In_ const std::string& groupName, _In_ const std::string& tags);
 
 private:
+    // TODO: Do access to these need to be guarded? ie. will EWrapper serialize the callbacks?
+    AccountSummaryMap m_accountSummaryMap;
+
+    EReaderOSSignal m_osSignal;
+    const std::unique_ptr<EClientSocket> m_client;
+    std::unique_ptr<EReader> m_reader;
+
 #pragma region EWrapper
     virtual void tickPrice(TickerId tickerId, TickType field, double price, int canAutoExecute);
     virtual void tickSize(TickerId tickerId, TickType field, int size);
@@ -70,7 +95,7 @@ private:
     virtual void commissionReport(const CommissionReport& commissionReport);
     virtual void position(const std::string& account, const Contract& contract, double position, double avgCost);
     virtual void positionEnd();
-    virtual void accountSummary(int reqId, const std::string& account, const std::string& tag, const std::string& value, const std::string& curency);
+    virtual void accountSummary(int reqId, const std::string& account, const std::string& tag, const std::string& value, const std::string& currency);
     virtual void accountSummaryEnd(int reqId);
     virtual void verifyMessageAPI(const std::string& apiData);
     virtual void verifyCompleted(bool isSuccessful, const std::string& errorText);
@@ -87,8 +112,4 @@ private:
     virtual void securityDefinitionOptionalParameterEnd(int reqId);
     virtual void softDollarTiers(int reqId, const std::vector<SoftDollarTier> &tiers);
 #pragma endregion
-
-    EReaderOSSignal m_osSignal;
-    const std::unique_ptr<EClientSocket> m_client;
-    std::unique_ptr<EReader> m_reader;
 };
