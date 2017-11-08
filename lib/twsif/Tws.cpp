@@ -38,9 +38,6 @@ class Tws : public TwsInterface, public EWrapper, public std::enable_shared_from
 public:
     Tws();
 
-    // Injection constructor for unit testing.
-    Tws(std::unique_ptr<EClientSocket> client);
-
     virtual bool Connect(_In_ const std::string host, _In_ uint32_t port, _In_ int32_t clientId = 0);
     virtual void Disconnect() const;
     virtual bool IsConnected() const;
@@ -48,8 +45,6 @@ public:
 
     int GetNextRequestId();
 
-    typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> AccountSummary;
-    typedef std::map<int, std::pair<std::shared_ptr<AsyncRequest<AccountSummary>>, AccountSummary>> AccountSummaryMap;
     virtual std::shared_ptr<AsyncResult<AccountSummary>> RequestAccountSummary(_In_ const std::string& groupName, _In_ const std::string& tags);
 
 private:
@@ -57,7 +52,7 @@ private:
     AccountSummaryMap m_accountSummaryMap;
 
     EReaderOSSignal m_osSignal;
-    const std::unique_ptr<EClientSocket> m_client;
+    std::unique_ptr<EClientSocket> m_client;
     std::unique_ptr<EReader> m_reader;
 
 #pragma region EWrapper
@@ -125,21 +120,9 @@ std::shared_ptr<TwsInterface> TwsInterface::MakeShared()
     return std::make_shared<Tws>();
 }
 
-std::shared_ptr<TwsInterface> TwsInterface::MakeShared(std::unique_ptr<EClientSocket> client)
-{
-    return std::make_shared<Tws>(std::move(client));
-}
-
 Tws::Tws() :
     m_osSignal(2000),
     m_client(new EClientSocket(this, &m_osSignal))
-{
-
-}
-
-Tws::Tws(std::unique_ptr<EClientSocket> client) :
-    m_osSignal(2000),
-    m_client(std::move(client))
 {
 
 }
@@ -211,10 +194,13 @@ std::shared_ptr<AsyncResult<Tws::AccountSummary>> Tws::RequestAccountSummary(con
 #pragma region EWrapper
 void Tws::connectAck()
 {
-    if (m_client->asyncEConnect())
-    {
-        m_client->startApi();
-    }
+    printf("Connect ack.\n");
+
+    // As far as I can tell, asyncEConnect is never called.
+    //if (m_client->asyncEConnect())
+    //{
+    //    m_client->startApi();
+    //}
 }
 
 void Tws::nextValidId(OrderId orderId)

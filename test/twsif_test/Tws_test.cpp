@@ -1,31 +1,9 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
-#include <WinSock2.h>
-#include <Windows.h>
-#include <string>
-#include <deque>
-#include <vector>
-#include <algorithm>
-#include <memory>
-#include <map>
-#include <iostream>
-
-#define IB_WIN32
-#define TWSAPIDLLEXP
-
-#include <CommissionReport.h>
-#include <EClientSocket.h>
-#include <EReader.h>
-#include <EReaderOSSignal.h>
-#include <EWrapper.h>
-#include <Execution.h>
-#include <Order.h>
-#include <OrderState.h>
-
-#include <AsyncRequest.h>
-
 #include <Tws.h>
+
+#define DONT_CONNECT_TO_TWS
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -39,6 +17,17 @@ namespace twsif_test
 		{
             auto tws = TwsInterface::MakeShared();
 		}
+
+#ifndef DONT_CONNECT_TO_TWS
+        TEST_METHOD(Connection)
+        {
+            auto tws = TwsInterface::MakeShared();
+            Assert::IsTrue(tws->Connect("localhost", 1));
+            Assert::IsTrue(tws->IsConnected());
+            tws->Disconnect();
+            Assert::IsFalse(tws->IsConnected());
+        }
+#endif
 
 	};
 }

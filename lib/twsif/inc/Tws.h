@@ -15,9 +15,6 @@ class TwsInterface
 public:
     static std::shared_ptr<TwsInterface> MakeShared();
 
-    // Injection constructor for unit testing.
-    static std::shared_ptr<TwsInterface> MakeShared(std::unique_ptr<EClientSocket> client);
-
     virtual bool Connect(_In_ const std::string host, _In_ uint32_t port, _In_ int32_t clientId = 0) = 0;
     virtual void Disconnect() const = 0;
     virtual bool IsConnected() const = 0;
