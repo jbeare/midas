@@ -49,7 +49,7 @@ public:
         }
     }
 
-    bool WaitForResult(uint32_t timeout = 0)
+    bool WaitForResult(uint32_t timeout = INFINITE)
     {
         return m_event.Wait(timeout);
     }

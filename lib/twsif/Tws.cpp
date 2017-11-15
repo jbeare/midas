@@ -7,6 +7,7 @@
 #include <memory>
 #include <map>
 #include <iostream>
+#include <thread>
 
 #define IB_WIN32
 #define TWSAPIDLLEXP
@@ -37,15 +38,26 @@ class Tws : public TwsInterface, public EWrapper, public std::enable_shared_from
 {
 public:
     Tws();
+    ~Tws();
 
     virtual bool Connect(_In_ const std::string host, _In_ uint32_t port, _In_ int32_t clientId = 0);
-    virtual void Disconnect() const;
+    virtual void Disconnect();
     virtual bool IsConnected() const;
     virtual void SetConnectOptions(_In_ const std::string& connectOptions);
 
     int GetNextRequestId();
 
     virtual std::shared_ptr<AsyncResult<AccountSummary>> RequestAccountSummary(_In_ const std::string& groupName, _In_ const std::string& tags);
+
+    virtual std::shared_ptr<AsyncResult<void>> RequestHistoricalMarketData(
+        _In_ const Contract& contract,
+        _In_ const std::string& endDateTime,
+        _In_ const std::string& durationStr,
+        _In_ const std::string& barSizeSetting,
+        _In_ const std::string& whatToShow,
+        _In_ int useRTH,
+        _In_ int formatDate,
+        _In_ const TagValueListSPtr& chartOptions);
 
 private:
     // TODO: Do access to these need to be guarded? ie. will EWrapper serialize the callbacks?
@@ -54,6 +66,7 @@ private:
     EReaderOSSignal m_osSignal;
     std::unique_ptr<EClientSocket> m_client;
     std::unique_ptr<EReader> m_reader;
+    std::thread m_thread;
 
 #pragma region EWrapper
     virtual void tickPrice(TickerId tickerId, TickType field, double price, int canAutoExecute);
@@ -127,6 +140,14 @@ Tws::Tws() :
 
 }
 
+Tws::~Tws()
+{
+    if (IsConnected())
+    {
+        Disconnect();
+    }
+}
+
 bool Tws::Connect(const std::string host, uint32_t port, int32_t clientId)
 {
     printf("Connecting to %s:%d clientId:%d\n", !host.empty() ? "127.0.0.1" : host.c_str(), port, clientId);
@@ -138,6 +159,15 @@ bool Tws::Connect(const std::string host, uint32_t port, int32_t clientId)
         printf("Connected to %s:%d clientId:%d\n", m_client->host().c_str(), m_client->port(), clientId);
         m_reader.reset(new EReader(m_client.get(), &m_osSignal));
         m_reader->start();
+        m_thread = std::thread([&]()
+        {
+            while (IsConnected())
+            {
+                m_reader->checkClient();
+                m_osSignal.waitForSignal();
+                m_reader->processMsgs();
+            }
+        });
     }
     else
     {
@@ -147,9 +177,13 @@ bool Tws::Connect(const std::string host, uint32_t port, int32_t clientId)
     return res;
 }
 
-void Tws::Disconnect() const
+void Tws::Disconnect()
 {
     m_client->eDisconnect();
+    if (m_thread.joinable())
+    {
+        m_thread.join();
+    }
     printf("Disconnected\n");
 }
 
@@ -191,16 +225,32 @@ std::shared_ptr<AsyncResult<Tws::AccountSummary>> Tws::RequestAccountSummary(con
     return req->GetAsyncResult();
 }
 
+std::shared_ptr<AsyncResult<void>> Tws::RequestHistoricalMarketData(
+    _In_ const Contract& contract,
+    _In_ const std::string& endDateTime,
+    _In_ const std::string& durationStr,
+    _In_ const std::string& barSizeSetting,
+    _In_ const std::string& whatToShow,
+    _In_ int useRTH,
+    _In_ int formatDate,
+    _In_ const TagValueListSPtr& chartOptions)
+{
+    auto reqId = Tws::GetNextRequestId();
+
+    m_client->reqHistoricalData(reqId, contract, endDateTime, durationStr, barSizeSetting, whatToShow, useRTH, formatDate, chartOptions);
+
+    return nullptr;
+}
+
 #pragma region EWrapper
 void Tws::connectAck()
 {
     printf("Connect ack.\n");
 
-    // As far as I can tell, asyncEConnect is never called.
-    //if (m_client->asyncEConnect())
-    //{
-    //    m_client->startApi();
-    //}
+    if (m_client->asyncEConnect())
+    {
+        m_client->startApi();
+    }
 }
 
 void Tws::nextValidId(OrderId orderId)
@@ -453,8 +503,11 @@ void Tws::verifyAndAuthMessageAPI(const std::string& apiDatai, const std::string
 void Tws::verifyAndAuthCompleted(bool isSuccessful, const std::string& errorText)
 {
     printf("verifyAndAuthCompleted. IsSuccessful: %d - Error: %s\n", isSuccessful, errorText.c_str());
+    
     if (isSuccessful)
+    {
         m_client->startApi();
+    }
 }
 
 void Tws::displayGroupList(int reqId, const std::string& groups)
