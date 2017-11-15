@@ -12,7 +12,7 @@
 
 class EClientSocket;
 
-class TwsInterface
+class __declspec(dllexport) TwsInterface
 {
 public:
     static std::shared_ptr<TwsInterface> MakeShared();
