@@ -29,8 +29,5 @@
     <ClInclude Include="Combination.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Classifier_old.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

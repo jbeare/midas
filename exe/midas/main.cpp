@@ -11,6 +11,7 @@
 #pragma warning(default : 4348 4267 4244 4458)
 
 #include <Classifier.h>
+
 #include "FeatureFinder.h"
 
 using namespace mlpack;
@@ -65,38 +66,71 @@ int main(int /*argc*/, char** /*argv*/)
         }
         */
 
-        auto c = Classifier::MakeShared(8, 5);
-        c->Train("AAPL_observations.csv", "AAPL_labels.csv", true);
+        /*{
+            auto c = Classifier::MakeShared(8, 5);
+            c->Train("AAPL_observations.csv", "AAPL_labels.csv", true);
 
-        aapl_results.resize(aapl_data.n_cols);
-        for (int i = 0; i < aapl_data.n_cols; i++)
+            aapl_results.resize(aapl_data.n_cols);
+            for (int i = 0; i < aapl_data.n_cols; i++)
+            {
+                aapl_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(aapl_data.col(i)));
+            }
+
+            ibm_results.resize(ibm_data.n_cols);
+            for (int i = 0; i < ibm_data.n_cols; i++)
+            {
+                ibm_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(ibm_data.col(i)));
+            }
+
+            intc_results.resize(intc_data.n_cols);
+            for (int i = 0; i < intc_data.n_cols; i++)
+            {
+                intc_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(intc_data.col(i)));
+            }
+
+            FeatureFinder::Analyze(aapl, aapl_labels, aapl_results);
+            FeatureFinder::Analyze(ibm, ibm_labels, ibm_results);
+            FeatureFinder::Analyze(intc, intc_labels, intc_results);
+        }*/
+
         {
-            aapl_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(aapl_data.col(i)));
+            {
+                auto c = Classifier::MakeShared(8, 5);
+                c->Train("AAPL_observations.csv", "AAPL_labels.csv", true);
+
+                aapl_results.resize(aapl_data.n_cols);
+                for (int i = 0; i < aapl_data.n_cols; i++)
+                {
+                    aapl_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(aapl_data.col(i)));
+                }
+            }
+
+            {
+                auto c = Classifier::MakeShared(8, 5);
+                c->Train("IBM_observations.csv", "IBM_labels.csv", true);
+
+                ibm_results.resize(ibm_data.n_cols);
+                for (int i = 0; i < ibm_data.n_cols; i++)
+                {
+                    ibm_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(ibm_data.col(i)));
+                }
+            }
+
+            {
+                auto c = Classifier::MakeShared(8, 5);
+                c->Train("INTC_observations.csv", "INTC_labels.csv", true);
+
+                intc_results.resize(intc_data.n_cols);
+                for (int i = 0; i < intc_data.n_cols; i++)
+                {
+                    intc_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(intc_data.col(i)));
+                }
+            }
+
+            FeatureFinder::Analyze(aapl, aapl_labels, aapl_results);
+            FeatureFinder::Analyze(ibm, ibm_labels, ibm_results);
+            FeatureFinder::Analyze(intc, intc_labels, intc_results);
         }
-
-        ibm_results.resize(ibm_data.n_cols);
-        for (int i = 0; i < ibm_data.n_cols; i++)
-        {
-            ibm_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(ibm_data.col(i)));
-        }
-
-        intc_results.resize(intc_data.n_cols);
-        for (int i = 0; i < intc_data.n_cols; i++)
-        {
-            intc_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(intc_data.col(i)));
-        }
-
-        FeatureFinder::Analyze(aapl, aapl_labels, aapl_results);
-        FeatureFinder::Analyze(ibm, ibm_labels, ibm_results);
-        FeatureFinder::Analyze(intc, intc_labels, intc_results);
-
-        /*Midas::Classifier c(aapl_data, aapl_labels, 5, 8);
-        aapl_results = c.Classify(aapl_data);
-        ibm_results = c.Classify(ibm_data);
-        intc_results = c.Classify(intc_data);
-        FeatureFinder::Analyze(aapl, aapl_labels, aapl_results);
-        FeatureFinder::Analyze(ibm, ibm_labels, ibm_results);
-        FeatureFinder::Analyze(intc, intc_labels, intc_results);*/
 
         system("pause");
     }

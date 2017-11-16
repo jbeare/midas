@@ -31,11 +31,13 @@ public:
             return data;
         }
 
-        arma::vec rowMean = arma::sum(data, 1) / (uint32_t)data.n_cols;
-        arma::mat centeredData = data - arma::repmat(rowMean, 1, data.n_cols);
+        arma::mat centeredData;
 
         if (m_eigenVectors.is_empty())
         {
+            m_mean = arma::sum(data, 1) / (uint32_t)data.n_cols;
+            centeredData = data - arma::repmat(m_mean, 1, data.n_cols);
+
             arma::vec eigenValues;
             arma::mat rightSingularValues;
 
@@ -48,6 +50,10 @@ public:
                 THROW_IF_FAILED_BOOL(arma::svd(m_eigenVectors, eigenValues, rightSingularValues, centeredData));
             }
         }
+        else
+        {
+            centeredData = data - arma::repmat(m_mean, 1, data.n_cols);
+        }
 
         if (m_eigenVectors.n_cols > maxDimensions)
         {
@@ -59,6 +65,7 @@ public:
 
 private:
     arma::mat m_eigenVectors;
+    arma::vec m_mean;
 };
 
 class ClassifierImpl : public Classifier
@@ -107,7 +114,6 @@ public:
             m_pca = std::make_unique<Pca>();
         }
 
-        // TODO: Experiment with incremental varience.
         m_nbc.Train(m_pca->Transform(data, m_dimensions), labels);
     }
 
