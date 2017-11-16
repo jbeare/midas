@@ -1,30 +1,24 @@
+#define NOMINMAX
+
 #include <memory>
+#include <sal.h>
+#include <string>
+#include <MLib.h>
 
-#pragma warning(disable : 4348 4267 4244 4458)
-
+#pragma warning(disable : 4348 4267 4244 4458 6285 6287 6011 28251)
 #include <mlpack/core.hpp>
 #include <mlpack/methods/naive_bayes/naive_bayes_classifier.hpp>
 #include <mlpack/methods/pca/pca.hpp>
-
-#pragma warning(default : 4348 4267 4244 4458)
-
-#include <sal.h>
-#include <string>
-
-#include <MLib.h>
+#pragma warning(default : 4348 4267 4244 4458 6285 6287 6011 28251)
 
 #include "Classifier.h"
-
-#define THROW_IF_FAILED_BOOL(cond) {if(!cond){throw std::exception();}}
 
 class Pca
 {
 public:
     // Each Row is a feature.
     // Each Column is a datapoint.
-    arma::mat Transform(
-        _In_ const arma::mat& data,
-        _In_ uint32_t maxDimensions)
+    arma::mat Transform(_In_ const arma::mat& data, _In_ uint32_t maxDimensions)
     {
         if (maxDimensions == 0)
         {
@@ -43,11 +37,11 @@ public:
 
             if (data.n_rows < data.n_cols)
             {
-                THROW_IF_FAILED_BOOL(arma::svd_econ(m_eigenVectors, eigenValues, rightSingularValues, centeredData, 'l'));
+                THROW_HR_IF_FAILED_BOOL(arma::svd_econ(m_eigenVectors, eigenValues, rightSingularValues, centeredData, 'l'));
             }
             else
             {
-                THROW_IF_FAILED_BOOL(arma::svd(m_eigenVectors, eigenValues, rightSingularValues, centeredData));
+                THROW_HR_IF_FAILED_BOOL(arma::svd(m_eigenVectors, eigenValues, rightSingularValues, centeredData));
             }
         }
         else
@@ -151,12 +145,14 @@ private:
     mlpack::naive_bayes::NaiveBayesClassifier<> m_nbc;
 };
 
-std::shared_ptr<Classifier> Classifier::MakeShared(_In_ uint32_t classes, _In_ uint32_t dimensions)
+_Use_decl_annotations_
+std::shared_ptr<Classifier> Classifier::MakeShared(uint32_t classes, uint32_t dimensions)
 {
     return std::make_shared<ClassifierImpl>(classes, dimensions);
 }
 
-std::shared_ptr<Classifier> Classifier::MakeShared(_In_ std::string name)
+_Use_decl_annotations_
+std::shared_ptr<Classifier> Classifier::MakeShared(std::string name)
 {
     return std::make_shared<ClassifierImpl>(name);
 }

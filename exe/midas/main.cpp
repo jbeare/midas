@@ -1,14 +1,12 @@
-
-#pragma warning(disable : 4348 4267 4244 4458)
-
 #include <stdlib.h>
 #include <stdio.h>
+#include <map>
+
+#pragma warning(disable : 4348 4267 4244 4458 6285 6287 6011 28251)
 #include <mlpack/core.hpp>
 #include <mlpack/methods/naive_bayes/naive_bayes_classifier.hpp>
 #include <mlpack/methods/pca/pca.hpp>
-#include <map>
-
-#pragma warning(default : 4348 4267 4244 4458)
+#pragma warning(default : 4348 4267 4244 4458 6285 6287 6011 28251)
 
 #include <Classifier.h>
 

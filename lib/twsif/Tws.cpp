@@ -146,6 +146,7 @@ TwsImpl::~TwsImpl()
     }
 }
 
+_Use_decl_annotations_
 bool TwsImpl::Connect(const std::string host, uint32_t port, int32_t clientId)
 {
     printf("Connecting to %s:%d clientId:%d\n", !host.empty() ? "127.0.0.1" : host.c_str(), port, clientId);
@@ -190,6 +191,7 @@ bool TwsImpl::IsConnected() const
     return m_client->isConnected();
 }
 
+_Use_decl_annotations_
 void TwsImpl::SetConnectOptions(const std::string& connectOptions)
 {
     m_client->setConnectOptions(connectOptions);
@@ -202,6 +204,7 @@ int TwsImpl::GetNextRequestId()
     return InterlockedIncrement(&reqId);
 }
 
+_Use_decl_annotations_
 std::shared_ptr<AsyncResult<TwsImpl::AccountSummary>> TwsImpl::RequestAccountSummary(const std::string& groupName, const std::string& tags)
 {
     auto reqId = TwsImpl::GetNextRequestId();
@@ -223,15 +226,16 @@ std::shared_ptr<AsyncResult<TwsImpl::AccountSummary>> TwsImpl::RequestAccountSum
     return req->GetAsyncResult();
 }
 
+_Use_decl_annotations_
 std::shared_ptr<AsyncResult<void>> TwsImpl::RequestHistoricalMarketData(
-    _In_ const Contract& contract,
-    _In_ const std::string& endDateTime,
-    _In_ const std::string& durationStr,
-    _In_ const std::string& barSizeSetting,
-    _In_ const std::string& whatToShow,
-    _In_ int useRTH,
-    _In_ int formatDate,
-    _In_ const TagValueListSPtr& chartOptions)
+    const Contract& contract,
+    const std::string& endDateTime,
+    const std::string& durationStr,
+    const std::string& barSizeSetting,
+    const std::string& whatToShow,
+    int useRTH,
+    int formatDate,
+    const TagValueListSPtr& chartOptions)
 {
     auto reqId = TwsImpl::GetNextRequestId();
 
