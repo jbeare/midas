@@ -23,6 +23,7 @@ public:
         }
     };
 
+#if 0
     static std::vector<FeatureSpec> FindFeatures(
         _In_ const arma::mat& data,
         _In_ const arma::Row<size_t>& labels,
@@ -106,6 +107,7 @@ public:
             m_specs.push_back(FeatureSpec{ score, features, dimensions });
         }
     }
+#endif
 
     static double Analyze(const arma::mat& data, const arma::Row<size_t>& labels, const arma::Row<size_t>& results)
     {

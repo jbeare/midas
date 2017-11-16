@@ -5,32 +5,7 @@
 #include <exception>
 #include <iostream>
 
-class MLibException : public std::exception
-{
-public:
-    MLibException(HRESULT hr) :
-        m_hr(hr)
-    {
-
-    }
-
-    virtual const char* what() const throw()
-    {
-        static char buffer[20];
-        const char format[] = "Exception HRESULT: 0x%8x\n";
-        if (sprintf_s(buffer, sizeof(buffer), format, sizeof(format)) == -1)
-        {
-            return std::exception::what();
-        }
-        return buffer;
-    }
-
-private:
-    HRESULT m_hr;
-};
-
-#define THROW_HR_IF_FAILED_GET_LAST_ERROR(condition) {if(!(condition)) {throw MLibException{HRESULT_FROM_WIN32(GetLastError())};}}
-#define THROW_HR_GET_LAST_ERROR() {throw MLibException{HRESULT_FROM_WIN32(GetLastError())};}
+#include <MLibException.h>
 
 class UniqueHandle
 {
@@ -49,7 +24,7 @@ public:
         other.m_handle = INVALID_HANDLE_VALUE;
     }
 
-    ~UniqueHandle()
+    virtual ~UniqueHandle()
     {
         CloseHandle(m_handle);
     }

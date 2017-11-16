@@ -11,7 +11,7 @@
 
 int main()
 {
-    auto tws = TwsInterface::MakeShared();
+    auto tws = Tws::MakeShared();
 
     while (1)
     {

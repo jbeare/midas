@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <memory>
 #include <mutex>
+
+#include <MLibException.h>
 #include <UniqueHandle.h>
 
 template<class Result>

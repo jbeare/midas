@@ -6,16 +6,16 @@
 #include <string>
 #include <vector>
 
-#include <AsyncRequest.h>
+#include <MLib.h>
 
 #include <Contract.h>
 
 class EClientSocket;
 
-class __declspec(dllexport) TwsInterface
+class __declspec(dllexport) Tws
 {
 public:
-    static std::shared_ptr<TwsInterface> MakeShared();
+    static std::shared_ptr<Tws> MakeShared();
 
     virtual bool Connect(_In_ const std::string host, _In_ uint32_t port, _In_ int32_t clientId = 0) = 0;
     virtual void Disconnect() = 0;

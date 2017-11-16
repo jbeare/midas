@@ -15,13 +15,13 @@ namespace twsif_test
 		
 		TEST_METHOD(TwsTest_Construction)
 		{
-            auto tws = TwsInterface::MakeShared();
+            auto tws = Tws::MakeShared();
 		}
 
 #ifndef DONT_CONNECT_TO_TWS
         TEST_METHOD(Connection)
         {
-            auto tws = TwsInterface::MakeShared();
+            auto tws = Tws::MakeShared();
             Assert::IsTrue(tws->Connect("localhost", 1));
             Assert::IsTrue(tws->IsConnected());
             tws->Disconnect();
