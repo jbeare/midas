@@ -57,6 +57,13 @@ public:
         return (arma::trans(m_eigenVectors) * centeredData);
     }
 
+    template<typename Archive>
+    void Serialize(Archive& ar)
+    {
+        ar & mlpack::data::CreateNVP(m_eigenVectors, "Pca_m_eigenVectors");
+        ar & mlpack::data::CreateNVP(m_mean, "Pca_m_mean");
+    }
+
 private:
     arma::mat m_eigenVectors;
     arma::vec m_mean;
@@ -79,7 +86,7 @@ public:
     }
 
 #pragma region Classifier
-    virtual void Train(_In_ std::string trainingDataPath, _In_ std::string trainingLabelsPath, _In_ bool updatePca)
+    virtual void Train(_In_ std::string const& trainingDataPath, _In_ std::string const& trainingLabelsPath, _In_ bool updatePca)
     {
         arma::Mat<double> data;
         arma::Row<size_t> labels;
@@ -111,7 +118,7 @@ public:
         m_nbc.Train(m_pca->Transform(data, m_dimensions), labels);
     }
 
-    virtual uint32_t Classify(_In_ std::vector<double> data)
+    virtual uint32_t Classify(_In_ std::vector<double> const& data)
     {
         MLIB_ASSERT((data.size() == m_features), E_INVALIDARG);
 
@@ -124,18 +131,30 @@ public:
         return static_cast<uint32_t>(results[0]);
     }
 
-    virtual void Load(_In_ std::string name)
+    virtual void Load(_In_ std::string const& name)
     {
-        // Not implemented.
-        throw std::exception();
+        std::ifstream ifs(name, std::ios::binary);
+        boost::archive::xml_iarchive ar(ifs);
+        Serialize<boost::archive::xml_iarchive>(ar);
     }
 
-    virtual void Store(_In_ std::string name)
+    virtual void Store(_In_ std::string const& name)
     {
-        // Not implemented.
-        throw std::exception();
+        std::ofstream ofs(name, std::ios::binary);
+        boost::archive::xml_oarchive ar(ofs);
+        Serialize<boost::archive::xml_oarchive>(ar);
     }
 #pragma endregion
+
+    template<typename Archive>
+    void Serialize(Archive& ar)
+    {
+        ar & mlpack::data::CreateNVP(m_classes, "ClassifierImpl_m_classes");
+        ar & mlpack::data::CreateNVP(m_dimensions, "ClassifierImpl_m_dimensions");
+        ar & mlpack::data::CreateNVP(m_features, "ClassifierImpl_m_features");
+        m_pca->Serialize<Archive>(ar);
+        m_nbc.Serialize<Archive>(ar, 0);
+    }
 
 private:
     uint32_t m_classes{};
@@ -152,7 +171,7 @@ std::shared_ptr<Classifier> Classifier::MakeShared(uint32_t classes, uint32_t di
 }
 
 _Use_decl_annotations_
-std::shared_ptr<Classifier> Classifier::MakeShared(std::string name)
+std::shared_ptr<Classifier> Classifier::MakeShared(std::string const& name)
 {
     return std::make_shared<ClassifierImpl>(name);
 }

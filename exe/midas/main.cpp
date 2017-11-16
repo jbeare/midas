@@ -101,6 +101,8 @@ int main(int /*argc*/, char** /*argv*/)
                 {
                     aapl_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(aapl_data.col(i)));
                 }
+
+                c->Store("AAPL_Archive");
             }
 
             {
@@ -112,11 +114,51 @@ int main(int /*argc*/, char** /*argv*/)
                 {
                     ibm_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(ibm_data.col(i)));
                 }
+
+                c->Store("IBM_Archive");
             }
 
             {
                 auto c = Classifier::MakeShared(8, 5);
                 c->Train("INTC_observations.csv", "INTC_labels.csv", true);
+
+                intc_results.resize(intc_data.n_cols);
+                for (int i = 0; i < intc_data.n_cols; i++)
+                {
+                    intc_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(intc_data.col(i)));
+                }
+
+                c->Store("INTC_Archive");
+            }
+
+            FeatureFinder::Analyze(aapl, aapl_labels, aapl_results);
+            FeatureFinder::Analyze(ibm, ibm_labels, ibm_results);
+            FeatureFinder::Analyze(intc, intc_labels, intc_results);
+        }
+
+        {
+            {
+                auto c = Classifier::MakeShared("AAPL_Archive");
+
+                aapl_results.resize(aapl_data.n_cols);
+                for (int i = 0; i < aapl_data.n_cols; i++)
+                {
+                    aapl_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(aapl_data.col(i)));
+                }
+            }
+
+            {
+                auto c = Classifier::MakeShared("IBM_Archive");
+
+                ibm_results.resize(ibm_data.n_cols);
+                for (int i = 0; i < ibm_data.n_cols; i++)
+                {
+                    ibm_results[i] = c->Classify(arma::conv_to<std::vector<double>>::from(ibm_data.col(i)));
+                }
+            }
+
+            {
+                auto c = Classifier::MakeShared("INTC_Archive");
 
                 intc_results.resize(intc_data.n_cols);
                 for (int i = 0; i < intc_data.n_cols; i++)
