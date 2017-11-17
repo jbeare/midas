@@ -91,7 +91,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc;..\..\lib\mlib\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <PreBuildEvent>
       <Command>
@@ -108,7 +108,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc;..\..\lib\mlib\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <PreBuildEvent>
       <Command>
@@ -127,7 +127,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc;..\..\lib\mlib\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -148,7 +148,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lib\mlpif\inc;..\..\lib\mlib\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -165,36 +165,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Combination.h" />
     <ClInclude Include="FeatureFinder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\boost.1.60.0.0\build\native\boost.targets" Condition="Exists('..\..\packages\boost.1.60.0.0\build\native\boost.targets')" />
-    <Import Project="..\..\packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets" Condition="Exists('..\..\packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets')" />
-    <Import Project="..\..\packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets" Condition="Exists('..\..\packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets')" />
-    <Import Project="..\..\packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets" Condition="Exists('..\..\packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets')" />
-    <Import Project="..\..\packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets" Condition="Exists('..\..\packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets')" />
-    <Import Project="..\..\packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets" Condition="Exists('..\..\packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets')" />
-    <Import Project="..\..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets" Condition="Exists('..\..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" />
-    <Import Project="..\..\packages\armadillo-code.7.800.2\build\native\armadillo-code.targets" Condition="Exists('..\..\packages\armadillo-code.7.800.2\build\native\armadillo-code.targets')" />
-    <Import Project="..\..\packages\mlpack-windows.2.2.0.5\build\native\mlpack-windows.targets" Condition="Exists('..\..\packages\mlpack-windows.2.2.0.5\build\native\mlpack-windows.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\boost.1.60.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.60.0.0\build\native\boost.targets'))" />
-    <Error Condition="!Exists('..\..\packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets'))" />
-    <Error Condition="!Exists('..\..\packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets'))" />
-    <Error Condition="!Exists('..\..\packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets'))" />
-    <Error Condition="!Exists('..\..\packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets'))" />
-    <Error Condition="!Exists('..\..\packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets'))" />
-    <Error Condition="!Exists('..\..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets'))" />
-    <Error Condition="!Exists('..\..\packages\armadillo-code.7.800.2\build\native\armadillo-code.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\armadillo-code.7.800.2\build\native\armadillo-code.targets'))" />
-    <Error Condition="!Exists('..\..\packages\mlpack-windows.2.2.0.5\build\native\mlpack-windows.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\mlpack-windows.2.2.0.5\build\native\mlpack-windows.targets'))" />
-  </Target>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

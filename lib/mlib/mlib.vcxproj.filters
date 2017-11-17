@@ -27,5 +27,11 @@
     <ClInclude Include="inc\MLib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\Combination.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\SimpleMatrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <mlpack/core/arma_extend/arma_extend.hpp>
-#include <mlpack/core/util/arma_traits.hpp>
 #include <sal.h>
 #include <vector>
 #include <mutex>
 #include <thread>
-#include "Combination.h"
+
+#include <MLib.h>
+#include <Combination.h>
 
 class FeatureFinder
 {
@@ -109,9 +109,9 @@ public:
     }
 #endif
 
-    static double Analyze(const arma::mat& data, const arma::Row<size_t>& labels, const arma::Row<size_t>& results)
+    static double Analyze(const SimpleMatrix<double>& data, const std::vector<uint32_t>& labels, const std::vector<uint32_t>& results)
     {
-        if ((data.n_rows != labels.n_cols) || (results.n_cols != labels.n_cols) || (results.n_rows != labels.n_rows))
+        if ((data.NumRows() != labels.size()) || (results.size() != labels.size()))
         {
             printf("Data error!\n");
             return 0;
@@ -134,10 +134,10 @@ public:
         int lossOnBadTrade{};
         int gainOnBadTrade{};
 
-        for (uint32_t i = 1; i < data.n_rows - 1; i++)
+        for (uint32_t i = 1; i < data.NumRows() - 1; i++)
         {
-            auto d0 = data.row(i);
-            auto d1 = data.row(i + 1);
+            auto d0 = data.Row(i);
+            auto d1 = data.Row(i + 1);
             labelSpread[labels[i]]++;
             resultSpread[results[i]]++;
             if (labels[i] > 0)
@@ -215,7 +215,7 @@ public:
         // Gainz (actual gain / max gain)
 
         double c = correct;
-        uint64_t r = (uint64_t)data.n_rows;
+        uint64_t r = (uint64_t)data.NumRows();
         printf("Accuracy +/-0:%.f/%llu(%.2f) +/-1:%.f/%llu(%.2f) +/-2:%.f/%llu(%.2f) +/-3:%.f/%llu(%.2f) +/-4:%.f/%llu(%.2f)\n",
             c, r, c / r,
             c + underSpread[1] + overSpread[1], r, (c + underSpread[1] + overSpread[1]) / r,
