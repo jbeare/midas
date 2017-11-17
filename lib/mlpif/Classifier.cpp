@@ -3,7 +3,7 @@
 #include <memory>
 #include <sal.h>
 #include <string>
-#include <MLib.h>
+#include <MLibException.h>
 
 #pragma warning(disable : 4348 4267 4244 4458 6285 6287 6011 28251)
 #include <mlpack/core.hpp>

@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 
-#include <MLib.h>
+#include <SimpleMatrix.h>
 #include <Combination.h>
 
 class FeatureFinder
