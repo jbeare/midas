@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="inc\AsyncRequest.h" />
     <ClInclude Include="inc\Combination.h" />
+    <ClInclude Include="inc\FeatureFinder.h" />
     <ClInclude Include="inc\MLibException.h" />
     <ClInclude Include="inc\SimpleMatrix.h" />
     <ClInclude Include="inc\UniqueHandle.h" />

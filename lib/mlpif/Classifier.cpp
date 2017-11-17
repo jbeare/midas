@@ -99,36 +99,48 @@ public:
 
         data = data.t();
 
-        if (m_features == 0)
+        Train(data, labels, updatePca);
+    }
+
+    virtual void Train(_In_ SimpleMatrix<double> const& trainingData, _In_ std::vector<uint32_t> const& trainingLabels, _In_ bool updatePca)
+    {
+        arma::Mat<double> data;
+        for (uint32_t i = 0; i < trainingData.NumCols(); i++)
         {
-            MLIB_ASSERT((data.n_rows <= UINT32_MAX), E_INVALIDARG);
-            m_features = static_cast<uint32_t>(data.n_rows);
-            MLIB_ASSERT((m_features >= m_dimensions), E_INVALIDARG);
+            data.insert_cols(data.n_cols, arma::Col<double>{trainingData.Col(i).GetVector()});
         }
+        data = data.t();
 
-        MLIB_ASSERT((data.n_rows == m_features), E_INVALIDARG);
-        MLIB_ASSERT((data.n_cols > 0), E_INVALIDARG);
-        MLIB_ASSERT((data.n_cols == labels.n_cols), E_INVALIDARG);
+        Train(data, arma::conv_to<arma::Row<size_t>>::from(trainingLabels), updatePca);
+    }
 
-        if (updatePca)
+    virtual std::vector<uint32_t> Classify(_In_ std::string const& dataPath)
+    {
+        arma::Mat<double> data;
+
+        // The data is expected to be in row=datapoint column=feature format.
+        THROW_HR_IF_FAILED_BOOL(data.load(dataPath, arma::file_type::csv_ascii));
+
+        data = data.t();
+
+        return Classify(data);
+    }
+
+    virtual std::vector<uint32_t> Classify(_In_ SimpleMatrix<double> const& data)
+    {
+        arma::Mat<double> d;
+        for (uint32_t i = 0; i < data.NumCols(); i++)
         {
-            m_pca = std::make_unique<Pca>();
+            d.insert_cols(d.n_cols, arma::Col<double>{data.Col(i).GetVector()});
         }
+        d = d.t();
 
-        m_nbc.Train(m_pca->Transform(data, m_dimensions), labels);
+        return Classify(d);
     }
 
     virtual uint32_t Classify(_In_ std::vector<double> const& data)
     {
-        MLIB_ASSERT((data.size() == m_features), E_INVALIDARG);
-
-        arma::Row<size_t> results;
-        m_nbc.Classify(m_pca->Transform(data, m_dimensions), results);
-
-        MLIB_ASSERT((results.size() == 1), E_UNEXPECTED);
-        MLIB_ASSERT((results[0] <= UINT32_MAX), E_UNEXPECTED);
-
-        return static_cast<uint32_t>(results[0]);
+        return Classify(arma::Mat<double>{data})[0];
     }
 
     virtual void Load(_In_ std::string const& name)
@@ -157,6 +169,41 @@ public:
     }
 
 private:
+    // Assume data is in format: row:feature col:datapoint.
+    std::vector<uint32_t> Classify(_In_ arma::Mat<double> data)
+    {
+        MLIB_ASSERT((data.n_rows == m_features), E_INVALIDARG);
+
+        arma::Row<size_t> results;
+        m_nbc.Classify(m_pca->Transform(data, m_dimensions), results);
+
+        MLIB_ASSERT((results.size() == data.n_cols), E_UNEXPECTED);
+
+        return arma::conv_to<std::vector<uint32_t>>::from(results.row(0));
+    }
+
+    // Assume data is in format: row:feature col:datapoint.
+    void Train(_In_ arma::Mat<double> data, _In_ arma::Row<size_t> labels, _In_ bool updatePca)
+    {
+        if (m_features == 0)
+        {
+            MLIB_ASSERT((data.n_rows <= UINT32_MAX), E_INVALIDARG);
+            m_features = static_cast<uint32_t>(data.n_rows);
+            MLIB_ASSERT((m_features >= m_dimensions), E_INVALIDARG);
+        }
+
+        MLIB_ASSERT((data.n_rows == m_features), E_INVALIDARG);
+        MLIB_ASSERT((data.n_cols > 0), E_INVALIDARG);
+        MLIB_ASSERT((data.n_cols == labels.n_cols), E_INVALIDARG);
+
+        if (updatePca)
+        {
+            m_pca = std::make_unique<Pca>();
+        }
+
+        m_nbc.Train(m_pca->Transform(data, m_dimensions), labels);
+    }
+
     uint32_t m_classes{};
     uint32_t m_dimensions{};
     uint32_t m_features{};

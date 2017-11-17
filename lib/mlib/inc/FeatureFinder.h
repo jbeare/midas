@@ -25,34 +25,38 @@ public:
 
 #if 0
     static std::vector<FeatureSpec> FindFeatures(
-        _In_ const arma::mat& data,
-        _In_ const arma::Row<size_t>& labels,
-        _In_ const arma::mat& testRawData,
-        _In_ const arma::mat& testData,
-        _In_ const arma::Row<size_t>& testLabels,
+        _In_ SimpleMatrix<double> const& data,
+        _In_ std::vector<uint32_t> const& labels,
+        _In_ SimpleMatrix<double> const& testRawData,
+        _In_ SimpleMatrix<double> const& testData,
+        _In_ std::vector<uint32_t> const& testLabels,
         _In_ uint32_t maxDimensions)
     {
         std::vector<std::thread> threads;
         std::vector<uint32_t> v;
         m_specs.clear();
 
-        for (uint32_t i = 0; i < data.n_rows; i++)
+        for (uint32_t i = 0; i < data.NumCols(); i++)
         {
             v.push_back(i);
         }
 
-        for (uint32_t i = 1; (i <= data.n_rows) && (i <= maxDimensions); i++)
+        for (uint32_t i = 1; (i <= data.NumCols()) && (i <= maxDimensions); i++)
         {
             do
             {
-                arma::mat d, t;
+                std::vector<double> dv, tv;
                 for (uint32_t j = 0; j < i; j++)
                 {
-                    d.insert_rows(d.n_rows, data.row(v[j]));
-                    t.insert_rows(t.n_rows, testData.row(v[j]));
+                    auto dc = data.Col(v[j]).GetVector();
+                    auto tc = testData.Col(v[j]).GetVector();
+                    dv.insert(dv.end(), dc.begin(), dc.end());
+                    tv.insert(tv.end(), tc.begin(), tc.end());
                 }
+                SimpleMatrix<double> d(dv, data.NumRows(), i);
+                SimpleMatrix<double> t(tv, testData.NumRows(), i);
 
-                for (uint32_t k = 1; (k <= d.n_rows) && (k <= maxDimensions); k++)
+                for (uint32_t k = 1; (k <= d.NumCols()) && (k <= maxDimensions); k++)
                 {
                     /*printf("d=%d ", k);
                     for (auto& e : v)
@@ -90,15 +94,17 @@ public:
     }
 
     static void _FindFeatures(
-        _In_ const arma::mat& data,
-        _In_ const arma::Row<size_t>& labels,
-        _In_ const arma::mat& testRawData,
-        _In_ const arma::mat& testData,
-        _In_ const arma::Row<size_t>& testLabels,
+        _In_ SimpleMatrix<double> const& data,
+        _In_ std::vector<uint32_t> const& labels,
+        _In_ SimpleMatrix<double> const& testRawData,
+        _In_ SimpleMatrix<double> const& testData,
+        _In_ std::vector<uint32_t> const& testLabels,
         _In_ uint32_t dimensions,
-        _In_ std::vector<uint32_t> features)
+        _In_ std::vector<uint32_t> const& features)
     {
-        Midas::Classifier c(data, labels, dimensions, 8);
+        auto c = Classifier::MakeShared(8, dimensions);
+
+        Classifier c(data, labels, dimensions, 8);
         auto testResults = c.Classify(testData);
         auto score = Analyze(testRawData, testLabels, testResults);
         if (score > 65)

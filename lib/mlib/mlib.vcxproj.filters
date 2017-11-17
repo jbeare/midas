@@ -30,5 +30,8 @@
     <ClInclude Include="inc\SimpleMatrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\FeatureFinder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

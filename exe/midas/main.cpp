@@ -4,8 +4,7 @@
 
 #include <Classifier.h>
 #include <SimpleMatrix.h>
-
-#include "FeatureFinder.h"
+#include <FeatureFinder.h>
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -141,6 +140,51 @@ int main(int /*argc*/, char** /*argv*/)
 
         {
             {
+                auto c = Classifier::MakeShared(8, 5);
+                c->Train(aapl_data, aapl_labels.GetVector(), true);
+
+                aapl_results.resize(aapl_data.NumRows());
+                for (uint32_t i = 0; i < aapl_data.NumRows(); i++)
+                {
+                    aapl_results[i] = c->Classify(aapl_data.Row(i).GetVector());
+                }
+
+                c->Store("AAPL_Archive");
+            }
+
+            {
+                auto c = Classifier::MakeShared(8, 5);
+                c->Train(ibm_data, ibm_labels.GetVector(), true);
+
+                ibm_results.resize(ibm_data.NumRows());
+                for (uint32_t i = 0; i < ibm_data.NumRows(); i++)
+                {
+                    ibm_results[i] = c->Classify(ibm_data.Row(i).GetVector());
+                }
+
+                c->Store("IBM_Archive");
+            }
+
+            {
+                auto c = Classifier::MakeShared(8, 5);
+                c->Train(intc_data, intc_labels.GetVector(), true);
+
+                intc_results.resize(intc_data.NumRows());
+                for (uint32_t i = 0; i < intc_data.NumRows(); i++)
+                {
+                    intc_results[i] = c->Classify(intc_data.Row(i).GetVector());
+                }
+
+                c->Store("INTC_Archive");
+            }
+
+            FeatureFinder::Analyze(aapl, aapl_labels.GetVector(), aapl_results);
+            FeatureFinder::Analyze(ibm, ibm_labels.GetVector(), ibm_results);
+            FeatureFinder::Analyze(intc, intc_labels.GetVector(), intc_results);
+        }
+
+        {
+            {
                 auto c = Classifier::MakeShared("AAPL_Archive");
 
                 aapl_results.resize(aapl_data.NumRows());
@@ -168,6 +212,48 @@ int main(int /*argc*/, char** /*argv*/)
                 {
                     intc_results[i] = c->Classify(intc_data.Row(i).GetVector());
                 }
+            }
+
+            FeatureFinder::Analyze(aapl, aapl_labels.GetVector(), aapl_results);
+            FeatureFinder::Analyze(ibm, ibm_labels.GetVector(), ibm_results);
+            FeatureFinder::Analyze(intc, intc_labels.GetVector(), intc_results);
+        }
+
+        {
+            {
+                auto c = Classifier::MakeShared("AAPL_Archive");
+                aapl_results = c->Classify(aapl_data);
+            }
+
+            {
+                auto c = Classifier::MakeShared("IBM_Archive");
+                ibm_results = c->Classify(ibm_data);
+            }
+
+            {
+                auto c = Classifier::MakeShared("INTC_Archive");
+                intc_results = c->Classify(intc_data);
+            }
+
+            FeatureFinder::Analyze(aapl, aapl_labels.GetVector(), aapl_results);
+            FeatureFinder::Analyze(ibm, ibm_labels.GetVector(), ibm_results);
+            FeatureFinder::Analyze(intc, intc_labels.GetVector(), intc_results);
+        }
+
+        {
+            {
+                auto c = Classifier::MakeShared("AAPL_Archive");
+                aapl_results = c->Classify("AAPL_observations.csv");
+            }
+
+            {
+                auto c = Classifier::MakeShared("IBM_Archive");
+                ibm_results = c->Classify("IBM_observations.csv");
+            }
+
+            {
+                auto c = Classifier::MakeShared("INTC_Archive");
+                intc_results = c->Classify("INTC_observations.csv");
             }
 
             FeatureFinder::Analyze(aapl, aapl_labels.GetVector(), aapl_results);
