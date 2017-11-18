@@ -130,6 +130,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="inc\Analyzer.h" />
     <ClInclude Include="inc\AsyncRequest.h" />
     <ClInclude Include="inc\Combination.h" />
     <ClInclude Include="inc\FeatureFinder.h" />

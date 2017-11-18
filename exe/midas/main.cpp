@@ -5,6 +5,7 @@
 #include <Classifier.h>
 #include <SimpleMatrix.h>
 #include <FeatureFinder.h>
+#include <Analyzer.h>
 
 SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -41,9 +42,9 @@ void DoClassifyStuff()
         intc_results = c->Classify(intc_data);
     }
 
-    FeatureFinder::Analyze(aapl, aapl_labels.GetVector(), aapl_results);
-    FeatureFinder::Analyze(ibm, ibm_labels.GetVector(), ibm_results);
-    FeatureFinder::Analyze(intc, intc_labels.GetVector(), intc_results);
+    Analyzer::Analyze(aapl, aapl_labels.GetVector(), aapl_results).Print();
+    Analyzer::Analyze(ibm, ibm_labels.GetVector(), ibm_results).Print();
+    Analyzer::Analyze(intc, intc_labels.GetVector(), intc_results).Print();
 }
 
 void DoFeatureFindingStuff()
@@ -55,9 +56,11 @@ void DoFeatureFindingStuff()
 
     std::map<uint32_t, uint32_t> featureMap;
 
-    for (auto& spec : specs)
+    for (int i = 0; i < (specs.size() / 10); i++)
     {
-        for (auto& feature : spec.Features)
+        specs[i].Print();
+
+        for (auto& feature : specs[i].Features)
         {
             featureMap[feature]++;
         }
