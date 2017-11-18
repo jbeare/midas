@@ -36,5 +36,11 @@
     <ClInclude Include="inc\Analyzer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\DataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\DataBrowser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

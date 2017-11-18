@@ -6,6 +6,7 @@
 #include <SimpleMatrix.h>
 #include <FeatureFinder.h>
 #include <Analyzer.h>
+#include <DataBrowser.h>
 
 SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -72,12 +73,19 @@ void DoFeatureFindingStuff()
     }
 }
 
+void DoDataBrowserStuff()
+{
+    auto db = GoogleDataBrowser::MakeShared("D:\\codestore\\stockmarket\\Stocks");
+    auto b = db->GetBars("INTC", BarResolution::Minute, 0u, 100u);
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
     while (1)
     {
-        DoClassifyStuff();
-        DoFeatureFindingStuff();
+        //DoClassifyStuff();
+        //DoFeatureFindingStuff();
+        DoDataBrowserStuff();
 
         system("pause");
     }
