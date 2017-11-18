@@ -16,8 +16,7 @@
 class Pca
 {
 public:
-    // Each Row is a feature.
-    // Each Column is a datapoint.
+    // Assume data is in format: row:feature col:datapoint.
     arma::mat Transform(_In_ const arma::mat& data, _In_ uint32_t maxDimensions)
     {
         if (maxDimensions == 0)

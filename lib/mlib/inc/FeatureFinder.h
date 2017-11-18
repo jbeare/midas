@@ -23,7 +23,6 @@ public:
         }
     };
 
-#if 0
     static std::vector<FeatureSpec> FindFeatures(
         _In_ SimpleMatrix<double> const& data,
         _In_ std::vector<uint32_t> const& labels,
@@ -36,35 +35,35 @@ public:
         std::vector<uint32_t> v;
         m_specs.clear();
 
+        // Load a vector with each index.
         for (uint32_t i = 0; i < data.NumCols(); i++)
         {
             v.push_back(i);
         }
 
+        // From 1 to max num of features.
         for (uint32_t i = 1; (i <= data.NumCols()) && (i <= maxDimensions); i++)
         {
+            // For each combination of 'i' number of features.
             do
             {
+                // Create training and test data sets.
                 std::vector<double> dv, tv;
-                for (uint32_t j = 0; j < i; j++)
+                for (uint32_t j = 0; j < data.NumRows(); j++)
                 {
-                    auto dc = data.Col(v[j]).GetVector();
-                    auto tc = testData.Col(v[j]).GetVector();
-                    dv.insert(dv.end(), dc.begin(), dc.end());
-                    tv.insert(tv.end(), tc.begin(), tc.end());
+                    for (uint32_t k = 0; k < i; k++)
+                    {
+                        dv.push_back(data.Row(j)[k]);
+                        tv.push_back(testData.Row(j)[k]);
+                    }
                 }
+
                 SimpleMatrix<double> d(dv, data.NumRows(), i);
                 SimpleMatrix<double> t(tv, testData.NumRows(), i);
 
+                // From 1 to max num of dimensions.
                 for (uint32_t k = 1; (k <= d.NumCols()) && (k <= maxDimensions); k++)
                 {
-                    /*printf("d=%d ", k);
-                    for (auto& e : v)
-                    {
-                        std::cout << e << " ";
-                    }
-                    std::cout << endl;*/
-
                     if (threads.size() >= 4)
                     {
                         for (auto& th : threads)
@@ -75,10 +74,6 @@ public:
                     }
 
                     threads.push_back(std::thread(_FindFeatures, d, labels, testRawData, t, testLabels, k, std::vector<uint32_t>{v.begin(), v.begin() + i}));
-
-                    //Midas::Classifier c(d, labels, k, 8);
-                    //auto results = c.Classify(d);
-                    //s.push_back(FeatureSpec{ Analyze(rawData, labels, results), v, k });
                 }
 
             } while (next_combination(v.begin(), v.begin() + i, v.end()));
@@ -103,19 +98,14 @@ public:
         _In_ std::vector<uint32_t> const& features)
     {
         auto c = Classifier::MakeShared(8, dimensions);
-
-        Classifier c(data, labels, dimensions, 8);
-        auto testResults = c.Classify(testData);
-        auto score = Analyze(testRawData, testLabels, testResults);
-        if (score > 65)
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_specs.push_back(FeatureSpec{ score, features, dimensions });
-        }
+        c->Train(data, labels, true);
+        auto testResults = c->Classify(testData);
+        auto score = Analyze(testRawData, testLabels, testResults, true);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_specs.push_back(FeatureSpec{ score, features, dimensions });
     }
-#endif
 
-    static double Analyze(const SimpleMatrix<double>& data, const std::vector<uint32_t>& labels, const std::vector<uint32_t>& results)
+    static double Analyze(const SimpleMatrix<double>& data, const std::vector<uint32_t>& labels, const std::vector<uint32_t>& results, bool quiet = false)
     {
         if ((data.NumRows() != labels.size()) || (results.size() != labels.size()))
         {
@@ -220,30 +210,33 @@ public:
         // Oppourtunities taken (taken chances/total chances, correct changes/total chances)
         // Gainz (actual gain / max gain)
 
-        double c = correct;
-        uint64_t r = (uint64_t)data.NumRows();
-        printf("Accuracy +/-0:%.f/%llu(%.2f) +/-1:%.f/%llu(%.2f) +/-2:%.f/%llu(%.2f) +/-3:%.f/%llu(%.2f) +/-4:%.f/%llu(%.2f)\n",
-            c, r, c / r,
-            c + underSpread[1] + overSpread[1], r, (c + underSpread[1] + overSpread[1]) / r,
-            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2]) / r,
-            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3]) / r,
-            c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4]) / r);
+        if (!quiet)
+        {
+            double c = correct;
+            uint64_t r = (uint64_t)data.NumRows();
+            printf("Accuracy +/-0:%.f/%llu(%.2f) +/-1:%.f/%llu(%.2f) +/-2:%.f/%llu(%.2f) +/-3:%.f/%llu(%.2f) +/-4:%.f/%llu(%.2f)\n",
+                c, r, c / r,
+                c + underSpread[1] + overSpread[1], r, (c + underSpread[1] + overSpread[1]) / r,
+                c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2]) / r,
+                c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3]) / r,
+                c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4], r, (c + underSpread[1] + overSpread[1] + underSpread[2] + overSpread[2] + underSpread[3] + overSpread[3] + underSpread[4] + overSpread[4]) / r);
 
-        printf("Gain %.2f/%.2f           Gain/Loss on over-classification %.2f\n", actGainTotal, maxGainTotal, loss);
-        printf("Trade/Opp %d/%d Good/Opp %d/%d Bad Gain/Loss %d/%d\n",
-            trades, opportunities, goodTrades, opportunities, gainOnBadTrade, lossOnBadTrade);
+            printf("Gain %.2f/%.2f           Gain/Loss on over-classification %.2f\n", actGainTotal, maxGainTotal, loss);
+            printf("Trade/Opp %d/%d Good/Opp %d/%d Bad Gain/Loss %d/%d\n",
+                trades, opportunities, goodTrades, opportunities, gainOnBadTrade, lossOnBadTrade);
 
-        printf("     .005     |      .01      |      .05      |      .10      |      .15      |      .20      |      .25\n");
-        printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n\n",
-            actGain[1], maxGain[1],
-            actGain[2], maxGain[2],
-            actGain[3], maxGain[3],
-            actGain[4], maxGain[4],
-            actGain[5], maxGain[5],
-            actGain[6], maxGain[6],
-            actGain[7], maxGain[7]);
+            printf("     .005     |      .01      |      .05      |      .10      |      .15      |      .20      |      .25\n");
+            printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n\n",
+                actGain[1], maxGain[1],
+                actGain[2], maxGain[2],
+                actGain[3], maxGain[3],
+                actGain[4], maxGain[4],
+                actGain[5], maxGain[5],
+                actGain[6], maxGain[6],
+                actGain[7], maxGain[7]);
+        }
 
-        return actGainTotal;
+        return actGainTotal + loss;
     }
 
 private:
