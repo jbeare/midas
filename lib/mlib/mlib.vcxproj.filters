@@ -36,10 +36,13 @@
     <ClInclude Include="inc\Analyzer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\DataSource.h">
+    <ClInclude Include="inc\DataBrowser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\DataBrowser.h">
+    <ClInclude Include="inc\Bar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\FeatureExtractor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

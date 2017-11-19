@@ -1,39 +1,19 @@
 #pragma once
 
 #include <string>
-#include <ctime>
 #include <vector>
 #include <filesystem>
 #include <map>
 #include <MLibException.h>
 #include <SimpleMatrix.h>
+#include <Bar.h>
 
 namespace fs = std::experimental::filesystem;
-
-enum class BarResolution
-{
-    Second,
-    Minute,
-    Hour,
-    Day
-};
-
-struct Bar
-{
-    std::string Symbol;
-    std::time_t Timestamp;
-    BarResolution Resolution;
-    double Open;
-    double High;
-    double Low;
-    double Close;
-    double Volume;
-};
 
 class DataBrowser
 {
 public:
-    virtual std::vector<std::string> GetContracts() = 0;
+    virtual std::vector<std::string> GetSymbols() = 0;
 
     virtual BarResolution GetNativeBarResolution() = 0;
 
@@ -90,7 +70,7 @@ public:
     }
 
 #pragma region DataBrowser
-    virtual std::vector<std::string> GetContracts()
+    virtual std::vector<std::string> GetSymbols()
     {
         std::vector<std::string> v;
         for (auto const& data : m_data)

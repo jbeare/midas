@@ -7,8 +7,9 @@
 #include <FeatureFinder.h>
 #include <Analyzer.h>
 #include <DataBrowser.h>
+#include <FeatureExtractor.h>
 
-SimpleMatrix<double>
+/*SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
     ibm_data("IBM_observations.csv"),
     intc_data("INTC_observations.csv");
@@ -71,12 +72,23 @@ void DoFeatureFindingStuff()
     {
         printf("%d : %d\n", pair.first, pair.second);
     }
-}
+}*/
 
 void DoDataBrowserStuff()
 {
     auto db = GoogleDataBrowser::MakeShared("D:\\codestore\\stockmarket\\Stocks");
-    auto b = db->GetBars("INTC", BarResolution::Minute, 0u, 100u);
+
+    for (auto const& symbol : db->GetSymbols())
+    {
+        std::cout << symbol << std::endl;
+        auto b = db->GetBars(symbol, BarResolution::Minute, 0u, db->GetBarCount(symbol, BarResolution::Minute) - 1);
+        auto f = FeatureExtractor::Extract(b);
+        std::vector<uint32_t> results;
+        auto c = Classifier::MakeShared(8, 5);
+        c->Train(std::get<1>(f), std::get<2>(f), true);
+        results = c->Classify(std::get<1>(f));
+        Analyzer::Analyze(std::get<0>(f), std::get<2>(f), results).Print();
+    }
 }
 
 int main(int /*argc*/, char** /*argv*/)
