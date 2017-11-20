@@ -7,7 +7,8 @@
 #include <FeatureFinder.h>
 #include <Analyzer.h>
 #include <DataBrowser.h>
-#include <Extractor.h>
+#include <FeatureStream.h>
+#include <LabelStream.h>
 
 /*SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -78,42 +79,31 @@ void DoDataBrowserStuff()
 {
     auto db = GoogleDataBrowser::MakeShared("D:\\codestore\\stockmarket\\Stocks");
 
-    /*for (auto const& symbol : db->GetSymbols())
+    for (auto const& symbol : db->GetSymbols())
     {
         std::cout << symbol << std::endl;
-        auto b = db->GetBars(symbol, BarResolution::Minute, 0u, db->GetBarCount(symbol, BarResolution::Minute) - 1);
-        auto f = Extractor::Extract(b);
-        //auto& raw = std::get<0>(f);
-        //auto& data = std::get<1>(f);
-        //auto& labels = std::get<2>(f);
+        auto bars = db->GetBars(symbol, BarResolution::Minute, 0u, db->GetBarCount(symbol, BarResolution::Minute) - 1);
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream<> ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
         std::vector<uint32_t> results;
         auto c = Classifier::MakeShared(8, 5);
-        c->Train(std::get<1>(f), std::get<2>(f), true);
-        results = c->Classify(std::get<1>(f));
-        Analyzer::Analyze(std::get<0>(f), std::get<2>(f), results).Print();
-    }*/
-    auto bars = db->GetBars("AAPL", BarResolution::Minute, 0u, db->GetBarCount("AAPL", BarResolution::Minute) - 1);
-
-    FeatureStream<> fs;
-    std::vector<FeatureSet> f;
-    fs << bars;
-    fs >> f;
-
-    LabelStream<> ls;
-    std::vector<BarLabel> l;
-    ls << bars;
-    ls >> l;
-
-    auto data = AlignTimestamps(bars, f, l);
-    auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
-    auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
-    auto labels = VectorFromLabelVector(std::get<2>(data));
-
-    std::vector<uint32_t> results;
-    auto c = Classifier::MakeShared(8, 5);
-    c->Train(features, labels, true);
-    results = c->Classify(features);
-    Analyzer::Analyze(raw, labels, results).Print();
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        Analyzer::Analyze(raw, labels, results).Print();
+    }
 }
 
 int main(int /*argc*/, char** /*argv*/)
