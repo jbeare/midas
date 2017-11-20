@@ -48,5 +48,14 @@
     <ClInclude Include="inc\LabelStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\Simulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Strategy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <map>
 
+#include <Simulator.h>
 #include <Classifier.h>
 #include <SimpleMatrix.h>
 #include <FeatureFinder.h>
@@ -79,7 +80,7 @@ void DoDataBrowserStuff()
 {
     auto db = GoogleDataBrowser::MakeShared("D:\\codestore\\stockmarket\\Stocks");
 
-    for (auto const& symbol : db->GetSymbols())
+    /*for (auto const& symbol : db->GetSymbols())
     {
         std::cout << symbol << std::endl;
         auto bars = db->GetBars(symbol, BarResolution::Minute, 0u, db->GetBarCount(symbol, BarResolution::Minute) - 1);
@@ -103,7 +104,16 @@ void DoDataBrowserStuff()
         c->Train(features, labels, true);
         results = c->Classify(features);
         Analyzer::Analyze(raw, labels, results).Print();
-    }
+    }*/
+
+
+    Simulator<> s(db, std::make_shared<DefaultStrategy>());
+    s.Run();
+}
+
+void DoQuantQuoteStuff()
+{
+    auto db = QuantQuoteDataBrowser::MakeShared("D:\\codestore\\stockmarket\\RAW_DATA_DO_NOT_FUCK_UP\\order_155998");
 }
 
 int main(int /*argc*/, char** /*argv*/)
@@ -112,7 +122,8 @@ int main(int /*argc*/, char** /*argv*/)
     {
         //DoClassifyStuff();
         //DoFeatureFindingStuff();
-        DoDataBrowserStuff();
+        //DoDataBrowserStuff();
+        DoQuantQuoteStuff();
 
         system("pause");
     }

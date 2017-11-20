@@ -10,6 +10,8 @@
 class DefaultLabelPolicy
 {
 public:
+    static constexpr uint32_t LabelCount{8};
+
     std::vector<uint32_t> Label(Bar const& bar, Bar const& bar_next)
     {
         if ((bar.Resolution != BarResolution::Minute) || (bar.Resolution != bar_next.Resolution))

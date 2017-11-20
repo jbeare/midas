@@ -11,6 +11,7 @@ class DefaultFeatureSet
 {
 public:
     static constexpr uint32_t HistoryDepth{6};
+    static constexpr uint32_t FeatureCount{6};
 
     DefaultFeatureSet() {}
 
@@ -49,11 +50,6 @@ public:
             GetDelta(m_queue.front().High, m_queue.front().Low),
             GetDelta(m_queue.back().Open, m_first.Open),
             GetDelta(m_queue.back().Close, m_first.Close)};
-    }
-
-    uint32_t GetNumFeatures()
-    {
-        return 6;
     }
 
 private:
