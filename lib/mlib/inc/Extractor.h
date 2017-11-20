@@ -1,17 +1,32 @@
 #pragma once
 
+#include <mutex>
 #include <queue>
 #include <vector>
 #include <Bar.h>
 #include <SimpleMatrix.h>
+#include <MLibException.h>
 
 class DefaultFeatureSet
 {
 public:
     static constexpr uint32_t HistoryDepth{6};
 
+    DefaultFeatureSet() {}
+
     std::vector<double> Extract(Bar const& bar)
     {
+        if (bar.Resolution != BarResolution::Minute)
+        {
+            throw MLibException(E_NOTIMPL);
+        }
+
+        // TODO: This should give us better data but its making the outcomes worse.
+        //if (!m_queue.empty() && ((bar.Timestamp - m_queue.back().Timestamp) != 60))
+        //{
+        //    m_queue = std::queue<Bar>();
+        //}
+
         m_queue.push(bar);
 
         if (m_queue.size() > HistoryDepth)
@@ -63,6 +78,17 @@ class DefaultLabelPolicy
 public:
     std::vector<uint32_t> Label(Bar const& bar, Bar const& bar_next)
     {
+        if ((bar.Resolution != BarResolution::Minute) || (bar.Resolution != bar_next.Resolution))
+        {
+            throw MLibException(E_NOTIMPL);
+        }
+
+        // TODO: This should give us better data but its making the outcomes worse.
+        //if ((bar_next.Timestamp - bar.Timestamp) != 60)
+        //{
+        //    return std::vector<uint32_t>();
+        //}
+
         auto delta = bar_next.High - bar.Close;
 
         if (delta > 0.25)
@@ -100,7 +126,7 @@ public:
     }
 };
 
-class FeatureExtractor
+class Extractor
 {
 public:
     template<class FS = DefaultFeatureSet, class LP = DefaultLabelPolicy>
@@ -138,4 +164,81 @@ public:
             SimpleMatrix<double>(featureVector, (static_cast<uint32_t>(featureVector.size()) / fs.GetNumFeatures()), fs.GetNumFeatures()),
             labelVector};
     }
+};
+
+template<class F = DefaultFeatureSet>
+class FeatureStream
+{
+public:
+    FeatureStream() {}
+
+    void operator<< (_In_ std::vector<Bar> const& bars)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (auto const& bar : bars)
+        {
+            std::vector<double> features = m_featureExtractor.Extract(bar);
+            if (features.size())
+            {
+                m_featureSets.push_back(
+                {
+                    bar.Symbol,
+                    bar.Timestamp,
+                    bar.Resolution,
+                    std::move(features)
+                });
+            }
+        }
+    }
+
+    void operator>> (_Out_ std::vector<FeatureSet>& features)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        features.insert(features.end(), m_featureSets.begin(), m_featureSets.end());
+        m_featureSets.clear();
+    }
+
+private:
+    F m_featureExtractor;
+    _Guarded_by_(m_mutex) std::mutex m_mutex;
+    _Guarded_by_(m_mutex) std::vector<FeatureSet> m_featureSets;
+};
+
+template<class L = DefaultLabelPolicy>
+class LabelStream
+{
+public:
+    void operator<< (_In_ std::vector<Bar> const& bars)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (int i = 0; i < bars.size() - 1; i++)
+        {
+            auto const& bar = bars[i];
+            auto const& bar_next = bars[i + 1];
+
+            std::vector<uint32_t> label = m_labelPolicy.Label(bar, bar_next);
+            if (label.size())
+            {
+                m_labels.push_back(
+                {
+                    bar.Symbol,
+                    bar.Timestamp,
+                    bar.Resolution,
+                    label[0]
+                });
+            }
+        }
+    }
+
+    void operator>> (_Out_ std::vector<BarLabel>& labels)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        labels.insert(labels.end(), m_labels.begin(), m_labels.end());
+        m_labels.clear();
+    }
+
+private:
+    std::mutex m_mutex;
+    _Guarded_by_(m_mutex) L m_labelPolicy;
+    _Guarded_by_(m_mutex) std::vector<BarLabel> m_labels;
 };

@@ -135,7 +135,7 @@
     <ClInclude Include="inc\Bar.h" />
     <ClInclude Include="inc\Combination.h" />
     <ClInclude Include="inc\DataBrowser.h" />
-    <ClInclude Include="inc\FeatureExtractor.h" />
+    <ClInclude Include="inc\Extractor.h" />
     <ClInclude Include="inc\FeatureFinder.h" />
     <ClInclude Include="inc\MLibException.h" />
     <ClInclude Include="inc\SimpleMatrix.h" />

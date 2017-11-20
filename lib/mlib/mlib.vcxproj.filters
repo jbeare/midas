@@ -42,7 +42,7 @@
     <ClInclude Include="inc\Bar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\FeatureExtractor.h">
+    <ClInclude Include="inc\Extractor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
