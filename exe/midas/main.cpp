@@ -10,6 +10,7 @@
 #include <DataBrowser.h>
 #include <FeatureStream.h>
 #include <LabelStream.h>
+#include <TrainingSetGenerator.h>
 
 /*SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -199,6 +200,52 @@ void DoQQFeatureFindingStuff()
     }
 }
 
+void DoQQTrainingGeneratorStuff()
+{
+    auto db = QuantQuoteDataBrowser::MakeShared("D:\\codestore\\stockmarket\\RAW_DATA_DO_NOT_FUCK_UP\\order_155998");
+
+    //for (auto const& symbol : db->GetSymbols())
+    {
+        std::string symbol = "ibm";
+        std::cout << symbol << std::endl;
+        auto range = db->GetBarRange(symbol, BarResolution::Minute);
+        auto bars = db->GetBars(symbol, BarResolution::Minute, Time{0, 0, 1, 1, 2014}.GetTimeStamp(), Time{0, 0, 1, 11, 2017}.GetTimeStamp());
+
+        if (bars.empty())
+        {
+            return;
+        }
+
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream<SimpleLabelPolicy> ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+
+        TrainingSetComposition comp{{0, .25},{1, .15},{2, .15},{3, .10},{4, .10},{5, .10},{6, .10},{7, .10}};
+        auto training = TrainingSetGenerator::Generate(comp, std::get<1>(data), std::get<2>(data));
+        auto trainingFeatures = SimpleMatrixFromFeatureSetVector(training.first);
+        auto trainingLabels = VectorFromLabelVector(training.second);
+
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        auto c = Classifier::MakeShared(SimpleLabelPolicy::LabelCount, 5);
+        //c->Train(trainingFeatures, trainingLabels, true);
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print();
+    }
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
     while (1)
@@ -206,8 +253,9 @@ int main(int /*argc*/, char** /*argv*/)
         //DoClassifyStuff();
         //DoFeatureFindingStuff();
         //DoDataBrowserStuff();
-        DoQuantQuoteStuff();
+        //DoQuantQuoteStuff();
         //DoQQFeatureFindingStuff();
+        DoQQTrainingGeneratorStuff();
 
         system("pause");
     }
