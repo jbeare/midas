@@ -55,8 +55,8 @@ void DoFeatureFindingStuff()
 {
     std::vector<uint32_t> aapl_results, ibm_results, intc_results;
 
-    //auto specs = FeatureFinder::FindFeatures(aapl_data, aapl_labels.GetVector(), ibm, ibm_data, ibm_labels.GetVector(), aapl_data.NumCols());
-    auto specs = FeatureFinder::FindFeatures(aapl_data, aapl_labels.GetVector(), aapl, aapl_data, aapl_labels.GetVector(), aapl_data.NumCols());
+    //auto specs = FeatureFinder::FindFeatures(aapl_data, aapl_labels.GetVector(), ibm, ibm_data, ibm_labels.GetVector(), aapl_data.NumCols(), 8);
+    auto specs = FeatureFinder::FindFeatures(aapl_data, aapl_labels.GetVector(), aapl, aapl_data, aapl_labels.GetVector(), aapl_data.NumCols(), 8);
 
     std::map<uint32_t, uint32_t> featureMap;
 
@@ -80,8 +80,9 @@ void DoDataBrowserStuff()
 {
     auto db = GoogleDataBrowser::MakeShared("D:\\codestore\\stockmarket\\Stocks");
 
-    /*for (auto const& symbol : db->GetSymbols())
+    //for (auto const& symbol : db->GetSymbols())
     {
+        std::string symbol = "IBM";
         std::cout << symbol << std::endl;
         auto bars = db->GetBars(symbol, BarResolution::Minute, 0u, db->GetBarCount(symbol, BarResolution::Minute) - 1);
         FeatureStream<> fs;
@@ -103,17 +104,99 @@ void DoDataBrowserStuff()
         auto c = Classifier::MakeShared(8, 5);
         c->Train(features, labels, true);
         results = c->Classify(features);
-        Analyzer::Analyze(raw, labels, results).Print();
-    }*/
+        Analyzer::Analyze2(raw, labels, results).Print();
+    }
 
-
-    Simulator<> s(db, std::make_shared<DefaultStrategy>());
-    s.Run();
+    //Simulator<> s(db, std::make_shared<DefaultStrategy>());
+    //s.Run();
 }
 
 void DoQuantQuoteStuff()
 {
     auto db = QuantQuoteDataBrowser::MakeShared("D:\\codestore\\stockmarket\\RAW_DATA_DO_NOT_FUCK_UP\\order_155998");
+
+    //for (auto const& symbol : db->GetSymbols())
+    {
+        std::string symbol = "ibm";
+        std::cout << symbol << std::endl;
+        auto range = db->GetBarRange(symbol, BarResolution::Minute);
+        auto bars = db->GetBars(symbol, BarResolution::Minute, Time{0, 0, 1, 10, 2017}.GetTimeStamp(), Time{0, 0, 1, 11, 2017}.GetTimeStamp());
+
+        if (bars.empty())
+        {
+            return;
+        }
+
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream<SimpleLabelPolicy> ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        auto c = Classifier::MakeShared(SimpleLabelPolicy::LabelCount, 5);
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print();
+    }
+}
+
+void DoQQFeatureFindingStuff()
+{
+    auto db = QuantQuoteDataBrowser::MakeShared("D:\\codestore\\stockmarket\\RAW_DATA_DO_NOT_FUCK_UP\\order_155998");
+
+    std::string symbol = "ibm";
+    std::cout << symbol << std::endl;
+    auto range = db->GetBarRange(symbol, BarResolution::Minute);
+    auto bars = db->GetBars(symbol, BarResolution::Minute, Time{0, 0, 1, 10, 2017}.GetTimeStamp(), Time{0, 0, 1, 11, 2017}.GetTimeStamp());
+
+    if (bars.empty())
+    {
+        return;
+    }
+
+    FeatureStream<> fs;
+    std::vector<FeatureSet> f;
+    fs << bars;
+    fs >> f;
+
+    LabelStream<> ls;
+    std::vector<BarLabel> l;
+    ls << bars;
+    ls >> l;
+
+    auto data = AlignTimestamps(bars, f, l);
+    auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+    auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+    auto labels = VectorFromLabelVector(std::get<2>(data));
+
+    auto specs = FeatureFinder::FindFeatures(features, labels, raw, features, labels, features.NumCols(), 8);
+
+    std::map<uint32_t, uint32_t> featureMap;
+
+    for (int i = 0; i < (specs.size() / 10); i++)
+    {
+        specs[i].Print();
+
+        for (auto& feature : specs[i].Features)
+        {
+            featureMap[feature]++;
+        }
+    }
+
+    for (auto& pair : featureMap)
+    {
+        printf("%d : %d\n", pair.first, pair.second);
+    }
 }
 
 int main(int /*argc*/, char** /*argv*/)
@@ -124,6 +207,7 @@ int main(int /*argc*/, char** /*argv*/)
         //DoFeatureFindingStuff();
         //DoDataBrowserStuff();
         DoQuantQuoteStuff();
+        //DoQQFeatureFindingStuff();
 
         system("pause");
     }

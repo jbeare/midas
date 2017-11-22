@@ -9,12 +9,14 @@
 #include <Analyzer.h>
 #include <SimpleMatrix.h>
 #include <Combination.h>
+#include <Classifier.h>
 
 struct FeatureCombination
 {
     double Score() const
     {
-        return Details.actGainTotal + Details.loss;
+        //return Details.actGainTotal + Details.loss;
+        return Details.netSpread[1] + Details.netSpread[2] + Details.netSpread[3] + Details.netSpread[4] + Details.netSpread[5] + Details.netSpread[6] + Details.netSpread[7];
     }
 
     void Print() const
@@ -48,7 +50,8 @@ public:
         _In_ SimpleMatrix<double> const& testRawData,
         _In_ SimpleMatrix<double> const& testData,
         _In_ std::vector<uint32_t> const& testLabels,
-        _In_ uint32_t maxDimensions)
+        _In_ uint32_t maxDimensions,
+        _In_ uint32_t maxLabels)
     {
         std::vector<std::thread> threads;
         std::vector<uint32_t> v;
@@ -92,7 +95,7 @@ public:
                         threads.clear();
                     }
 
-                    threads.push_back(std::thread(_FindFeatures, d, labels, testRawData, t, testLabels, k, std::vector<uint32_t>{v.begin(), v.begin() + i}));
+                    threads.push_back(std::thread(_FindFeatures, d, labels, testRawData, t, testLabels, k, maxLabels, std::vector<uint32_t>{v.begin(), v.begin() + i}));
                 }
 
             } while (next_combination(v.begin(), v.begin() + i, v.end()));
@@ -114,12 +117,13 @@ public:
         _In_ SimpleMatrix<double> const& testData,
         _In_ std::vector<uint32_t> const& testLabels,
         _In_ uint32_t dimensions,
+        _In_ uint32_t labelCount,
         _In_ std::vector<uint32_t> const& features)
     {
-        auto c = Classifier::MakeShared(8, dimensions);
+        auto c = Classifier::MakeShared(labelCount, dimensions);
         c->Train(data, labels, true);
         auto testResults = c->Classify(testData);
-        auto a = Analyzer::Analyze(testRawData, testLabels, testResults);
+        auto a = Analyzer::Analyze2(testRawData, testLabels, testResults);
         std::lock_guard<std::mutex> lock(m_mutex);
         m_specs.push_back(FeatureCombination{ features, dimensions, a });
     }

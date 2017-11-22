@@ -7,6 +7,63 @@
 #include <SimpleMatrix.h>
 #include <MLibException.h>
 
+class LargeFeatureSet
+{
+public:
+    static constexpr uint32_t HistoryDepth{6};
+    static constexpr uint32_t FeatureCount{1};
+
+    LargeFeatureSet() {}
+
+    std::vector<double> Extract(Bar const& bar)
+    {
+        if (bar.Resolution != BarResolution::Minute)
+        {
+            throw MLibException(E_NOTIMPL);
+        }
+
+        // TODO: This should give us better data but its making the outcomes worse.
+        //if (!m_queue.empty() && ((bar.Timestamp - m_queue.back().Timestamp) != 60))
+        //{
+        //    m_queue = std::queue<Bar>();
+        //}
+
+        m_queue.push(bar);
+
+        if (m_queue.size() > HistoryDepth)
+        {
+            m_queue.pop();
+        }
+        else if (m_queue.size() < HistoryDepth)
+        {
+            return std::vector<double>();
+        }
+        else
+        {
+            m_first = bar;
+        }
+
+        return {
+            GetDelta(m_queue.back().Close, m_queue.back().Open)};
+    }
+
+private:
+    double GetTimeOfDay(std::time_t timestamp)
+    {
+        std::tm t;
+        localtime_s(&t, &timestamp);
+        return (static_cast<double>(t.tm_sec) + (t.tm_min * 60) + (t.tm_hour * 3600)) / 86400;
+    }
+
+    double GetDelta(double x, double y)
+    {
+        return (((x - y) / y) / 2) + .5;
+    }
+
+    std::queue<Bar> m_queue;
+    Bar m_first;
+};
+
 class DefaultFeatureSet
 {
 public:

@@ -142,6 +142,7 @@
     <ClInclude Include="inc\SimpleMatrix.h" />
     <ClInclude Include="inc\Simulator.h" />
     <ClInclude Include="inc\Strategy.h" />
+    <ClInclude Include="inc\TrainingSetGenerator.h" />
     <ClInclude Include="inc\UniqueHandle.h" />
   </ItemGroup>
   <ItemGroup>

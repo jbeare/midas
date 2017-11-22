@@ -7,6 +7,61 @@
 #include <SimpleMatrix.h>
 #include <MLibException.h>
 
+class SimpleLabelPolicy
+{
+public:
+    static constexpr uint32_t LabelCount{8};
+
+    std::vector<uint32_t> Label(Bar const& bar, Bar const& bar_next)
+    {
+        if ((bar.Resolution != BarResolution::Minute) || (bar.Resolution != bar_next.Resolution))
+        {
+            throw MLibException(E_NOTIMPL);
+        }
+
+        // TODO: This should give us better data but its making the outcomes worse.
+        //if ((bar_next.Timestamp - bar.Timestamp) != 60)
+        //{
+        //    return std::vector<uint32_t>();
+        //}
+
+        auto delta = bar_next.Close - bar.Close;
+
+        if (delta > 0.20)
+        {
+            return {7};
+        }
+        else if (delta > 0.15)
+        {
+            return {6};
+        }
+        else if (delta > 0.10)
+        {
+            return {5};
+        }
+        else if (delta > 0.07)
+        {
+            return {4};
+        }
+        else if (delta > 0.05)
+        {
+            return {3};
+        }
+        else if (delta > 0.03)
+        {
+            return {2};
+        }
+        else if (delta > 0.01)
+        {
+            return {1};
+        }
+        else
+        {
+            return {0};
+        }
+    }
+};
+
 class DefaultLabelPolicy
 {
 public:

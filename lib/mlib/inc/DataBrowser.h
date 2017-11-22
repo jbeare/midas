@@ -157,6 +157,46 @@ private:
     std::map<std::string, std::unique_ptr<SimpleMatrix<double>>> m_data;
 };
 
+typedef uint64_t Timestamp;
+
+struct Time
+{
+    Time() {}
+
+    Time(uint8_t minutes, uint8_t hours, uint8_t day, uint8_t month, uint32_t year) :
+        Minutes(minutes),
+        Hours(hours),
+        Day(day),
+        Month(month),
+        Year(year) {}
+
+    Time(Timestamp timestamp)
+    {
+        Minutes = timestamp & 0xFF;
+        Hours = (timestamp >> (1 * 8)) & 0xFF;
+        Day = (timestamp >> (2 * 8)) & 0xFF;
+        Month = (timestamp >> (3 * 8)) & 0xFF;
+        Year = (timestamp >> (4 * 8)) & 0xFFFFFFFF;
+    }
+
+    uint8_t Minutes{0};
+    uint8_t Hours{0};
+    uint8_t Day{1};
+    uint8_t Month{1};
+    uint32_t Year{1900};
+
+    Timestamp GetTimeStamp()
+    {
+        Timestamp timestamp{};
+        timestamp += (Timestamp)Minutes;
+        timestamp += (Timestamp)Hours << (1 * 8);
+        timestamp += (Timestamp)Day << (2 * 8);
+        timestamp += (Timestamp)Month << (3 * 8);
+        timestamp += (Timestamp)Year << (4 * 8);
+        return timestamp;
+    }
+};
+
 class QuantQuoteDataBrowser : public DataBrowser
 {
 public:
@@ -209,16 +249,11 @@ public:
                 continue;
             }
 
-            std::tm date{};
-            if (sscanf_s(entry.path().stem().string().c_str(), "allstocks_%4d%2d%2d", &date.tm_year, &date.tm_mon, &date.tm_mday) != 3)
+            Time ts{};
+            if (sscanf_s(entry.path().stem().string().c_str(), "allstocks_%4u%2hhu%2hhu", &ts.Year, &ts.Month, &ts.Day) != 3)
             {
                 continue;
             }
-
-            date.tm_year -= 1900;
-            date.tm_mon -= 1;
-
-            auto dateKey = mktime(&date);
 
             for (auto const& subentry : fs::directory_iterator(entry.path()))
             {
@@ -238,7 +273,7 @@ public:
                     continue;
                 }
 
-                m_index[symbol][dateKey] = subentry.path().string();
+                m_index[symbol][ts.GetTimeStamp()] = subentry.path().string();
             }
         }
 
@@ -250,7 +285,12 @@ public:
 #pragma region DataBrowser
     virtual std::vector<std::string> GetSymbols()
     {
-        throw MLibException(E_NOTIMPL);
+        std::vector<std::string> v;
+        for (auto const& data : m_index)
+        {
+            v.push_back(data.first);
+        }
+        return v;
     }
 
     virtual BarResolution GetNativeBarResolution()
@@ -263,6 +303,55 @@ public:
         throw MLibException(E_NOTIMPL);
     }
 
+    virtual std::vector<Bar> GetBars(std::string symbol, BarResolution resolution, Timestamp start, Timestamp end)
+    {
+        if (m_index.find(symbol) == m_index.end())
+        {
+            throw MLibException(E_INVALIDARG);
+        }
+
+        if (resolution != BarResolution::Minute)
+        {
+            throw MLibException(E_NOTIMPL);
+        }
+
+        Time startTime(start), endTime(end);
+        Time startDay(start), endDay(end);
+        startDay.Hours = 0;
+        startDay.Minutes = 0;
+        endDay.Hours = 0;
+        endDay.Minutes = 0;
+        std::vector<Bar> bars;
+
+        for (auto const& csv : m_index[symbol])
+        {
+            if ((csv.first >= startDay.GetTimeStamp()) && (csv.first <= endDay.GetTimeStamp()))
+            {
+                SimpleMatrix<double> matrix(csv.second);
+                for (uint32_t i = 0; i < matrix.NumRows(); i++)
+                {
+                    auto const& row = matrix.Row(i);
+                    uint8_t minutes = static_cast<uint8_t>(static_cast<uint16_t>(row[1]) % 100);
+                    uint8_t hours = static_cast<uint8_t>((static_cast<uint16_t>(row[1]) - minutes) / 100);
+                    Time time{csv.first};
+                    time.Minutes = minutes;
+                    time.Hours = hours;
+                    Timestamp timestamp{time.GetTimeStamp()};
+
+                    if ((timestamp >= start) && (timestamp <= end))
+                    {
+                        if ((row[1] >= 930) && (row[1] < 1600))
+                        {
+                            bars.push_back({symbol, static_cast<std::time_t>(timestamp), resolution, row[2], row[3], row[4], row[5], row[6]});
+                        }
+                    }
+                }
+            }
+        }
+
+        return std::move(bars);
+    }
+
     virtual std::vector<Bar> GetBars(std::string /*symbol*/, BarResolution /*resolution*/, uint32_t /*start*/, uint32_t /*end*/)
     {
         throw MLibException(E_NOTIMPL);
@@ -273,9 +362,19 @@ public:
         throw MLibException(E_NOTIMPL);
     }
 
-    virtual std::pair<std::time_t, std::time_t> GetBarRange(std::string /*symbol*/, BarResolution /*resolution*/)
+    virtual std::pair<std::time_t, std::time_t> GetBarRange(std::string symbol, BarResolution resolution)
     {
-        throw MLibException(E_NOTIMPL);
+        if (m_index.find(symbol) == m_index.end())
+        {
+            throw MLibException(E_INVALIDARG);
+        }
+
+        if (resolution != BarResolution::Minute)
+        {
+            throw MLibException(E_NOTIMPL);
+        }
+
+        return std::pair<std::time_t, std::time_t>(m_index[symbol].begin()->first, (--m_index[symbol].end())->first + 86400);
     }
 #pragma endregion
 
@@ -289,5 +388,5 @@ private:
     }
 
     // m_index[symbol][date] = path_to_csv
-    std::map<std::string, std::map<std::time_t, std::string>> m_index;
+    std::map<std::string, std::map<Timestamp, std::string>> m_index;
 };
