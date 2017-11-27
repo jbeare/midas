@@ -42,6 +42,7 @@ struct Analysis
             gainSpread[6], lossSpread[6],
             gainSpread[7], lossSpread[7]);
 
+        printf("Net score: %f\n", netSpread[1] + netSpread[2] + netSpread[3] + netSpread[4] + netSpread[5] + netSpread[6] + netSpread[7]);
         printf("\n");
     }
 

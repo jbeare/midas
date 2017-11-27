@@ -45,9 +45,17 @@ public:
 
     int GetNextRequestId();
 
-    virtual std::shared_ptr<AsyncResult<AccountSummary>> RequestAccountSummary(_In_ const std::string& groupName, _In_ const std::string& tags);
+    virtual std::shared_ptr<AsyncResult<AccountSummary>> RequestAccountSummary(
+        _In_ const std::string& groupName,
+        _In_ const std::string& tags);
 
-    virtual std::shared_ptr<AsyncResult<void>> RequestHistoricalMarketData(
+    virtual std::shared_ptr<AsyncResult<void>> RequestMarketData(
+        _In_ const Contract& contract,
+        _In_ const std::string& genericTicks,
+        _In_ bool snapshot,
+        _In_ const TagValueListSPtr& mktDataOptions);
+
+    virtual std::shared_ptr<AsyncResult<HistoricalData>> RequestHistoricalMarketData(
         _In_ const Contract& contract,
         _In_ const std::string& endDateTime,
         _In_ const std::string& durationStr,
@@ -60,6 +68,7 @@ public:
 private:
     // TODO: Do access to these need to be guarded? ie. will EWrapper serialize the callbacks?
     AccountSummaryMap m_accountSummaryMap;
+    HistoricalDataMap m_historicalDataMap;
 
     EReaderOSSignal m_osSignal;
     std::unique_ptr<EClientSocket> m_client;
@@ -227,7 +236,25 @@ std::shared_ptr<AsyncResult<TwsImpl::AccountSummary>> TwsImpl::RequestAccountSum
 }
 
 _Use_decl_annotations_
-std::shared_ptr<AsyncResult<void>> TwsImpl::RequestHistoricalMarketData(
+std::shared_ptr<AsyncResult<void>> TwsImpl::RequestMarketData(
+    const Contract& contract,
+    const std::string& genericTicks,
+    bool snapshot,
+    const TagValueListSPtr& mktDataOptions)
+{
+    auto reqId = TwsImpl::GetNextRequestId();
+
+    m_client->reqMktData(reqId, contract, genericTicks, snapshot, mktDataOptions);
+
+    Sleep(100);
+
+    m_client->cancelMktData(reqId);
+
+    return nullptr;
+}
+
+_Use_decl_annotations_
+std::shared_ptr<AsyncResult<TwsImpl::HistoricalData>> TwsImpl::RequestHistoricalMarketData(
     const Contract& contract,
     const std::string& endDateTime,
     const std::string& durationStr,
@@ -239,9 +266,22 @@ std::shared_ptr<AsyncResult<void>> TwsImpl::RequestHistoricalMarketData(
 {
     auto reqId = TwsImpl::GetNextRequestId();
 
+    auto req = AsyncRequest<TwsImpl::HistoricalData>::MakeShared([&]() -> bool
+    {
+        if (std::key_exists(m_historicalDataMap, reqId))
+        {
+            m_client->cancelHistoricalData(reqId);
+            m_historicalDataMap.erase(reqId);
+            return true;
+        }
+        return false;
+    });
+
+    m_historicalDataMap[reqId] = {req,{}};
+
     m_client->reqHistoricalData(reqId, contract, endDateTime, durationStr, barSizeSetting, whatToShow, useRTH, formatDate, chartOptions);
 
-    return nullptr;
+    return req->GetAsyncResult();
 }
 
 #pragma region EWrapper
@@ -406,6 +446,19 @@ void TwsImpl::historicalData(TickerId reqId, const std::string& date, double ope
     double low, double close, int volume, int barCount, double WAP, int hasGaps)
 {
     printf("HistoricalData. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %d, Count: %d, WAP: %g, HasGaps: %d\n", reqId, date.c_str(), open, high, low, close, volume, barCount, WAP, hasGaps);
+
+    if (std::key_exists<int, std::pair<std::shared_ptr<AsyncRequest<HistoricalData>>, HistoricalData>>(m_historicalDataMap, reqId))
+    {
+        if (open > 0)
+        {
+            m_historicalDataMap[reqId].second.push_back({date, open, high, low, close, volume, barCount, WAP, hasGaps});
+        }
+        else
+        {
+            m_historicalDataMap[reqId].first->SetResult(std::move(m_historicalDataMap[reqId].second));
+            m_historicalDataMap.erase(reqId);
+        }
+    }
 }
 
 void TwsImpl::scannerParameters(const std::string& xml)

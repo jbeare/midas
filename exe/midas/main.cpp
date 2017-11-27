@@ -7,7 +7,9 @@
 #include <SimpleMatrix.h>
 #include <FeatureFinder.h>
 #include <Analyzer.h>
-#include <DataBrowser.h>
+#include <GoogleDataBrowser.h>
+#include <QuantQuoteDataBrowser.h>
+#include <TwsDataBrowser.h>
 #include <FeatureStream.h>
 #include <LabelStream.h>
 #include <TrainingSetGenerator.h>
@@ -83,7 +85,7 @@ void DoDataBrowserStuff()
 
     //for (auto const& symbol : db->GetSymbols())
     {
-        std::string symbol = "IBM";
+        std::string symbol = "XXX";
         std::cout << symbol << std::endl;
         auto bars = db->GetBars(symbol, BarResolution::Minute, 0u, db->GetBarCount(symbol, BarResolution::Minute) - 1);
         FeatureStream<> fs;
@@ -118,10 +120,10 @@ void DoQuantQuoteStuff()
 
     //for (auto const& symbol : db->GetSymbols())
     {
-        std::string symbol = "ibm";
+        std::string symbol = "aapl";
         std::cout << symbol << std::endl;
         auto range = db->GetBarRange(symbol, BarResolution::Minute);
-        auto bars = db->GetBars(symbol, BarResolution::Minute, Time{0, 0, 1, 10, 2017}.GetTimeStamp(), Time{0, 0, 1, 11, 2017}.GetTimeStamp());
+        auto bars = db->GetBars(symbol, BarResolution::Minute, Time{0, 0, 1, 11, 2017}.GetTimeStamp(), Time{0, 0, 7, 11, 2017}.GetTimeStamp());
 
         if (bars.empty())
         {
@@ -133,7 +135,7 @@ void DoQuantQuoteStuff()
         fs << bars;
         fs >> f;
 
-        LabelStream<SimpleLabelPolicy> ls;
+        LabelStream<> ls;
         std::vector<BarLabel> l;
         ls << bars;
         ls >> l;
@@ -144,7 +146,7 @@ void DoQuantQuoteStuff()
         auto labels = VectorFromLabelVector(std::get<2>(data));
 
         std::vector<uint32_t> results;
-        auto c = Classifier::MakeShared(SimpleLabelPolicy::LabelCount, 5);
+        auto c = Classifier::MakeShared(8, 5);
         c->Train(features, labels, true);
         results = c->Classify(features);
         Analyzer::Analyze2(raw, labels, results).Print();
@@ -165,7 +167,7 @@ void DoQQFeatureFindingStuff()
         return;
     }
 
-    FeatureStream<> fs;
+    FeatureStream<LargeFeatureSet2> fs;
     std::vector<FeatureSet> f;
     fs << bars;
     fs >> f;
@@ -180,14 +182,14 @@ void DoQQFeatureFindingStuff()
     auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
     auto labels = VectorFromLabelVector(std::get<2>(data));
 
-    auto specs = FeatureFinder::FindFeatures(features, labels, raw, features, labels, features.NumCols(), 8);
+    auto specs = FeatureFinder::FindFeatures(features, labels, raw, features, labels, 8, 8);
 
     std::map<uint32_t, uint32_t> featureMap;
 
+    specs.front().Print();
+
     for (int i = 0; i < (specs.size() / 10); i++)
     {
-        specs[i].Print();
-
         for (auto& feature : specs[i].Features)
         {
             featureMap[feature]++;
@@ -209,7 +211,7 @@ void DoQQTrainingGeneratorStuff()
         std::string symbol = "ibm";
         std::cout << symbol << std::endl;
         auto range = db->GetBarRange(symbol, BarResolution::Minute);
-        auto bars = db->GetBars(symbol, BarResolution::Minute, Time{0, 0, 1, 1, 2014}.GetTimeStamp(), Time{0, 0, 1, 11, 2017}.GetTimeStamp());
+        auto bars = db->GetBars(symbol, BarResolution::Minute, Time{0, 0, 1, 7, 2015}.GetTimeStamp(), Time{0, 0, 1, 8, 2015}.GetTimeStamp());
 
         if (bars.empty())
         {
@@ -221,14 +223,14 @@ void DoQQTrainingGeneratorStuff()
         fs << bars;
         fs >> f;
 
-        LabelStream<SimpleLabelPolicy> ls;
+        LabelStream<> ls;
         std::vector<BarLabel> l;
         ls << bars;
         ls >> l;
 
         auto data = AlignTimestamps(bars, f, l);
 
-        TrainingSetComposition comp{{0, .25},{1, .15},{2, .15},{3, .10},{4, .10},{5, .10},{6, .10},{7, .10}};
+        TrainingSetComposition comp{{0, .3},{1, .2},{2, .6},{3, .3},{4, .02},{5, .01},{6, .01},{7, .01}};
         auto training = TrainingSetGenerator::Generate(comp, std::get<1>(data), std::get<2>(data));
         auto trainingFeatures = SimpleMatrixFromFeatureSetVector(training.first);
         auto trainingLabels = VectorFromLabelVector(training.second);
@@ -237,12 +239,35 @@ void DoQQTrainingGeneratorStuff()
         auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
         auto labels = VectorFromLabelVector(std::get<2>(data));
 
-        std::vector<uint32_t> results;
-        auto c = Classifier::MakeShared(SimpleLabelPolicy::LabelCount, 5);
-        //c->Train(trainingFeatures, trainingLabels, true);
-        c->Train(features, labels, true);
-        results = c->Classify(features);
-        Analyzer::Analyze2(raw, labels, results).Print();
+        /*{
+            std::vector<uint32_t> results;
+            auto c = Classifier::MakeShared(SimpleLabelPolicy::LabelCount, 5);
+            c->Train(trainingFeatures, trainingLabels, true);
+            //c->Train(features, labels, true);
+            results = c->Classify(features);
+            Analyzer::Analyze2(raw, labels, results).Print();
+        }*/
+
+        {
+            auto specs = FeatureFinder::FindFeatures(trainingFeatures, trainingLabels, raw, features, labels, features.NumCols(), 8);
+
+            std::map<uint32_t, uint32_t> featureMap;
+
+            specs.front().Print();
+
+            for (int i = 0; i < (specs.size() / 10); i++)
+            {
+                for (auto& feature : specs[i].Features)
+                {
+                    featureMap[feature]++;
+                }
+            }
+
+            for (auto& pair : featureMap)
+            {
+                printf("%d : %d\n", pair.first, pair.second);
+            }
+        }
     }
 }
 
@@ -254,8 +279,8 @@ int main(int /*argc*/, char** /*argv*/)
         //DoFeatureFindingStuff();
         //DoDataBrowserStuff();
         //DoQuantQuoteStuff();
-        //DoQQFeatureFindingStuff();
-        DoQQTrainingGeneratorStuff();
+        DoQQFeatureFindingStuff();
+        //DoQQTrainingGeneratorStuff();
 
         system("pause");
     }

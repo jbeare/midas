@@ -70,22 +70,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\;..\twsif\inc;..\twsapi\inc</IncludePath>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\mlib\</IntDir>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\;..\twsif\inc;..\twsapi\inc</IncludePath>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\mlib\</IntDir>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\;..\twsif\inc;..\twsapi\inc</IncludePath>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\mlib\</IntDir>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\inc;..\mlpif\inc\;..\twsif\inc;..\twsapi\inc</IncludePath>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\mlib\</IntDir>
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -137,12 +137,15 @@
     <ClInclude Include="inc\DataBrowser.h" />
     <ClInclude Include="inc\FeatureFinder.h" />
     <ClInclude Include="inc\FeatureStream.h" />
+    <ClInclude Include="inc\GoogleDataBrowser.h" />
     <ClInclude Include="inc\LabelStream.h" />
     <ClInclude Include="inc\MLibException.h" />
+    <ClInclude Include="inc\QuantQuoteDataBrowser.h" />
     <ClInclude Include="inc\SimpleMatrix.h" />
     <ClInclude Include="inc\Simulator.h" />
     <ClInclude Include="inc\Strategy.h" />
     <ClInclude Include="inc\TrainingSetGenerator.h" />
+    <ClInclude Include="inc\TwsDataBrowser.h" />
     <ClInclude Include="inc\UniqueHandle.h" />
   </ItemGroup>
   <ItemGroup>

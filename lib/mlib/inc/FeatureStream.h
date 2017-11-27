@@ -1,17 +1,119 @@
 #pragma once
 
 #include <mutex>
+#include <deque>
 #include <queue>
 #include <vector>
 #include <Bar.h>
 #include <SimpleMatrix.h>
 #include <MLibException.h>
 
+class LargeFeatureSet2
+{
+public:
+    static constexpr uint32_t HistoryDepth{6};
+    static constexpr uint32_t FeatureCount{44};
+
+    LargeFeatureSet2() {}
+
+    std::vector<double> Extract(Bar const& bar)
+    {
+        if (bar.Resolution != BarResolution::Minute)
+        {
+            throw MLibException(E_NOTIMPL);
+        }
+
+        if (!m_queue.empty() && ((bar.Timestamp - m_queue.front().Timestamp) != 1))
+        {
+            m_queue.clear();
+        }
+
+        m_queue.push_front(bar);
+
+        if (m_queue.size() > HistoryDepth)
+        {
+            m_queue.pop_back();
+        }
+        else if (m_queue.size() < HistoryDepth)
+        {
+            return std::vector<double>();
+        }
+        else
+        {
+            m_first = bar;
+        }
+
+        return {
+            //GetTimeOfDay(m_queue[0].Timestamp),
+            GetDelta(m_queue[0].Open, m_first.Open),
+            GetDelta(m_queue[0].Close, m_first.Close),
+            GetDelta(m_queue[0].Close, m_queue[0].Open),
+            GetDelta(m_queue[0].High, m_queue[0].Low),
+            GetDelta(m_queue[1].Close, m_queue[1].Open),
+            GetDelta(m_queue[1].High, m_queue[1].Low),
+            GetDelta(m_queue[2].Close, m_queue[2].Open),
+            GetDelta(m_queue[2].High, m_queue[2].Low),
+            GetDelta(m_queue[3].Close, m_queue[3].Open),
+            GetDelta(m_queue[3].High, m_queue[3].Low),
+            GetDelta(m_queue[4].Close, m_queue[4].Open),
+            GetDelta(m_queue[4].High, m_queue[4].Low),
+            GetDelta(m_queue[5].Close, m_queue[5].Open),
+            GetDelta(m_queue[5].High, m_queue[5].Low),
+            GetDelta(m_queue[0].Open,   m_queue[1].Open),
+            GetDelta(m_queue[0].High,   m_queue[1].High),
+            GetDelta(m_queue[0].Low,    m_queue[1].Low),
+            GetDelta(m_queue[0].Close,  m_queue[1].Close),
+            GetDelta(m_queue[0].Close,  m_queue[1].Open),
+            GetDelta(m_queue[0].High,   m_queue[1].Low),
+            GetDelta(m_queue[0].Open,   m_queue[2].Open),
+            GetDelta(m_queue[0].High,   m_queue[2].High),
+            GetDelta(m_queue[0].Low,    m_queue[2].Low),
+            GetDelta(m_queue[0].Close,  m_queue[2].Close),
+            GetDelta(m_queue[0].Close,  m_queue[2].Open),
+            GetDelta(m_queue[0].High,   m_queue[2].Low),
+            GetDelta(m_queue[0].Open,   m_queue[3].Open),
+            GetDelta(m_queue[0].High,   m_queue[3].High),
+            GetDelta(m_queue[0].Low,    m_queue[3].Low),
+            GetDelta(m_queue[0].Close,  m_queue[3].Close),
+            GetDelta(m_queue[0].Close,  m_queue[3].Open),
+            GetDelta(m_queue[0].High,   m_queue[3].Low),
+            GetDelta(m_queue[0].Open,   m_queue[4].Open),
+            GetDelta(m_queue[0].High,   m_queue[4].High),
+            GetDelta(m_queue[0].Low,    m_queue[4].Low),
+            GetDelta(m_queue[0].Close,  m_queue[4].Close),
+            GetDelta(m_queue[0].Close,  m_queue[4].Open),
+            GetDelta(m_queue[0].High,   m_queue[4].Low),
+            GetDelta(m_queue[0].Open,   m_queue[5].Open),
+            GetDelta(m_queue[0].High,   m_queue[5].High),
+            GetDelta(m_queue[0].Low,    m_queue[5].Low),
+            GetDelta(m_queue[0].Close,  m_queue[5].Close),
+            GetDelta(m_queue[0].Close,  m_queue[5].Open),
+            GetDelta(m_queue[0].High,   m_queue[5].Low)
+        };
+    }
+
+private:
+    double GetTimeOfDay(std::time_t timestamp)
+    {
+        std::tm t;
+        localtime_s(&t, &timestamp);
+        return (static_cast<double>(t.tm_sec) + (t.tm_min * 60) + (t.tm_hour * 3600)) / 86400;
+    }
+
+    double GetDelta(double x, double y)
+    {
+        return (((x - y) / y) / 2) + .5;
+    }
+
+    std::deque<Bar> m_queue;
+    Bar m_first;
+};
+
 class LargeFeatureSet
 {
 public:
     static constexpr uint32_t HistoryDepth{6};
-    static constexpr uint32_t FeatureCount{1};
+    static constexpr uint32_t FeatureCount{44};
 
     LargeFeatureSet() {}
 
@@ -28,11 +130,11 @@ public:
         //    m_queue = std::queue<Bar>();
         //}
 
-        m_queue.push(bar);
+        m_queue.push_front(bar);
 
         if (m_queue.size() > HistoryDepth)
         {
-            m_queue.pop();
+            m_queue.pop_back();
         }
         else if (m_queue.size() < HistoryDepth)
         {
@@ -44,7 +146,52 @@ public:
         }
 
         return {
-            GetDelta(m_queue.back().Close, m_queue.back().Open)};
+            //GetTimeOfDay(m_queue[0].Timestamp),
+            GetDelta(m_queue[0].Open, m_first.Open),
+            GetDelta(m_queue[0].Close, m_first.Close),
+            GetDelta(m_queue[0].Close, m_queue[0].Open),
+            GetDelta(m_queue[0].High, m_queue[0].Low),
+            GetDelta(m_queue[1].Close, m_queue[1].Open),
+            GetDelta(m_queue[1].High, m_queue[1].Low),
+            GetDelta(m_queue[2].Close, m_queue[2].Open),
+            GetDelta(m_queue[2].High, m_queue[2].Low),
+            GetDelta(m_queue[3].Close, m_queue[3].Open),
+            GetDelta(m_queue[3].High, m_queue[3].Low),
+            GetDelta(m_queue[4].Close, m_queue[4].Open),
+            GetDelta(m_queue[4].High, m_queue[4].Low),
+            GetDelta(m_queue[5].Close, m_queue[5].Open),
+            GetDelta(m_queue[5].High, m_queue[5].Low),
+            GetDelta(m_queue[0].Open,   m_queue[1].Open),
+            GetDelta(m_queue[0].High,   m_queue[1].High),
+            GetDelta(m_queue[0].Low,    m_queue[1].Low),
+            GetDelta(m_queue[0].Close,  m_queue[1].Close),
+            GetDelta(m_queue[0].Close,  m_queue[1].Open),
+            GetDelta(m_queue[0].High,   m_queue[1].Low),
+            GetDelta(m_queue[0].Open,   m_queue[2].Open),
+            GetDelta(m_queue[0].High,   m_queue[2].High),
+            GetDelta(m_queue[0].Low,    m_queue[2].Low),
+            GetDelta(m_queue[0].Close,  m_queue[2].Close),
+            GetDelta(m_queue[0].Close,  m_queue[2].Open),
+            GetDelta(m_queue[0].High,   m_queue[2].Low),
+            GetDelta(m_queue[0].Open,   m_queue[3].Open),
+            GetDelta(m_queue[0].High,   m_queue[3].High),
+            GetDelta(m_queue[0].Low,    m_queue[3].Low),
+            GetDelta(m_queue[0].Close,  m_queue[3].Close),
+            GetDelta(m_queue[0].Close,  m_queue[3].Open),
+            GetDelta(m_queue[0].High,   m_queue[3].Low),
+            GetDelta(m_queue[0].Open,   m_queue[4].Open),
+            GetDelta(m_queue[0].High,   m_queue[4].High),
+            GetDelta(m_queue[0].Low,    m_queue[4].Low),
+            GetDelta(m_queue[0].Close,  m_queue[4].Close),
+            GetDelta(m_queue[0].Close,  m_queue[4].Open),
+            GetDelta(m_queue[0].High,   m_queue[4].Low),
+            GetDelta(m_queue[0].Open,   m_queue[5].Open),
+            GetDelta(m_queue[0].High,   m_queue[5].High),
+            GetDelta(m_queue[0].Low,    m_queue[5].Low),
+            GetDelta(m_queue[0].Close,  m_queue[5].Close),
+            GetDelta(m_queue[0].Close,  m_queue[5].Open),
+            GetDelta(m_queue[0].High,   m_queue[5].Low)
+        };
     }
 
 private:
@@ -60,7 +207,7 @@ private:
         return (((x - y) / y) / 2) + .5;
     }
 
-    std::queue<Bar> m_queue;
+    std::deque<Bar> m_queue;
     Bar m_first;
 };
 

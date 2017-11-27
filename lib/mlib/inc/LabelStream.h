@@ -10,7 +10,7 @@
 class SimpleLabelPolicy
 {
 public:
-    static constexpr uint32_t LabelCount{8};
+    static constexpr uint32_t LabelCount{2};
 
     std::vector<uint32_t> Label(Bar const& bar, Bar const& bar_next)
     {
@@ -27,31 +27,7 @@ public:
 
         auto delta = bar_next.Close - bar.Close;
 
-        if (delta > 0.20)
-        {
-            return {7};
-        }
-        else if (delta > 0.15)
-        {
-            return {6};
-        }
-        else if (delta > 0.10)
-        {
-            return {5};
-        }
-        else if (delta > 0.07)
-        {
-            return {4};
-        }
-        else if (delta > 0.05)
-        {
-            return {3};
-        }
-        else if (delta > 0.03)
-        {
-            return {2};
-        }
-        else if (delta > 0.01)
+        if (delta >= 0.1)
         {
             return {1};
         }
@@ -75,10 +51,10 @@ public:
         }
 
         // TODO: This should give us better data but its making the outcomes worse.
-        //if ((bar_next.Timestamp - bar.Timestamp) != 60)
-        //{
-        //    return std::vector<uint32_t>();
-        //}
+        if ((bar_next.Timestamp - bar.Timestamp) != 1)
+        {
+            return std::vector<uint32_t>();
+        }
 
         auto delta = bar_next.High - bar.Close;
 

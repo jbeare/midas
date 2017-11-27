@@ -24,9 +24,19 @@ public:
 
     typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> AccountSummary;
     typedef std::map<int, std::pair<std::shared_ptr<AsyncRequest<AccountSummary>>, AccountSummary>> AccountSummaryMap;
-    virtual std::shared_ptr<AsyncResult<AccountSummary>> RequestAccountSummary(_In_ const std::string& groupName, _In_ const std::string& tags) = 0;
+    virtual std::shared_ptr<AsyncResult<AccountSummary>> RequestAccountSummary(
+        _In_ const std::string& groupName,
+        _In_ const std::string& tags) = 0;
 
-    virtual std::shared_ptr<AsyncResult<void>> RequestHistoricalMarketData(
+    virtual std::shared_ptr<AsyncResult<void>> RequestMarketData(
+        _In_ const Contract& contract,
+        _In_ const std::string& genericTicks,
+        _In_ bool snapshot,
+        _In_ const TagValueListSPtr& mktDataOptions) = 0;
+
+    typedef std::vector<std::tuple<std::string, double, double, double, double, int, int, double, int>> HistoricalData;
+    typedef std::map<int, std::pair<std::shared_ptr<AsyncRequest<HistoricalData>>, HistoricalData>> HistoricalDataMap;
+    virtual std::shared_ptr<AsyncResult<HistoricalData>> RequestHistoricalMarketData(
         _In_ const Contract& contract,
         _In_ const std::string& endDateTime,
         _In_ const std::string& durationStr,

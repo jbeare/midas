@@ -5,6 +5,7 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <atomic>
 
 #include <Analyzer.h>
 #include <SimpleMatrix.h>
@@ -53,9 +54,9 @@ public:
         _In_ uint32_t maxDimensions,
         _In_ uint32_t maxLabels)
     {
-        std::vector<std::thread> threads;
         std::vector<uint32_t> v;
         m_specs.clear();
+        volatile bool killSwitch{false};
 
         // Load a vector with each index.
         for (uint32_t i = 0; i < data.NumCols(); i++)
@@ -76,6 +77,12 @@ public:
                     for (uint32_t k = 0; k < i; k++)
                     {
                         dv.push_back(data.Row(j)[k]);
+                    }
+                }
+                for (uint32_t j = 0; j < testData.NumRows(); j++)
+                {
+                    for (uint32_t k = 0; k < i; k++)
+                    {
                         tv.push_back(testData.Row(j)[k]);
                     }
                 }
@@ -86,28 +93,53 @@ public:
                 // From 1 to max num of dimensions.
                 for (uint32_t k = 1; (k <= d.NumCols()) && (k <= maxDimensions); k++)
                 {
-                    if (threads.size() >= 4)
+                    auto f = std::vector<uint32_t>{v.begin(), v.begin() + i};
+                    QueueWork([d, labels, testRawData, t, testLabels, k, maxLabels, f]()
                     {
-                        for (auto& th : threads)
-                        {
-                            th.join();
-                        }
-                        threads.clear();
-                    }
-
-                    threads.push_back(std::thread(_FindFeatures, d, labels, testRawData, t, testLabels, k, maxLabels, std::vector<uint32_t>{v.begin(), v.begin() + i}));
+                        _FindFeatures(d, labels, testRawData, t, testLabels, k, maxLabels, f);
+                    });
                 }
 
-            } while (next_combination(v.begin(), v.begin() + i, v.end()));
+            } while (!killSwitch && next_combination(v.begin(), v.begin() + i, v.end()));
         }
 
-        for (auto& th : threads)
-        {
-            th.join();
-        }
+        QueueWork({});
 
         std::sort(m_specs.begin(), m_specs.end());
         return m_specs;
+    }
+
+    static void QueueWork(std::function<void()> work)
+    {
+        static std::atomic<int> numActiveThreads{};
+        static std::vector<std::thread> threads;
+        static std::vector<std::function<void()>> workItems;
+
+        if (work)
+        {
+            workItems.push_back(work);
+        }
+
+        if ((!work && !workItems.empty()) || (workItems.size() >= 100))
+        {
+            threads.push_back(std::thread([](std::vector<std::function<void()>> wi)
+            {
+                for (auto& w : wi)
+                {
+                    w();
+                }
+            }, std::move(workItems)));
+            workItems.clear();
+        }
+
+        if (!work || (threads.size() >= 24))
+        {
+            for (auto& th : threads)
+            {
+                th.join();
+            }
+            threads.clear();
+        }
     }
 
     static void _FindFeatures(

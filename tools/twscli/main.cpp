@@ -37,13 +37,25 @@ int main()
             auto result = tws->RequestAccountSummary(group, tags);
             result->WaitForResult(1000);
         }
+        else if (args[0] == "RequestMarketData")
+        {
+            Contract contract;
+            contract.symbol = "MSFT";
+            contract.secType = "STK";
+            contract.currency = "USD";
+            contract.exchange = "SMART";
+            contract.primaryExchange = "ISLAND";
+
+            tws->RequestMarketData(contract, "", true, TagValueListSPtr());
+        }
         else if (args[0] == "RequestHistoricalMarketData")
         {
             Contract contract;
-            contract.symbol = "EUR";
-            contract.secType = "CASH";
+            contract.symbol = "MSFT";
+            contract.secType = "STK";
             contract.currency = "USD";
-            contract.exchange = "IDEALPRO";
+            contract.exchange = "SMART";
+            contract.primaryExchange = "ISLAND";
 
             std::time_t rawtime;
             std::tm* timeinfo;
@@ -53,7 +65,7 @@ int main()
             timeinfo = localtime(&rawtime);
             std::strftime(queryTime, 80, "%Y%m%d %H:%M:%S", timeinfo);
 
-            tws->RequestHistoricalMarketData(contract, queryTime, "5 M", "1 min", "TRADES", 1, 1, TagValueListSPtr());
+            tws->RequestHistoricalMarketData(contract, queryTime, "120 S", "1 min", "TRADES", 1, 1, TagValueListSPtr());
         }
         else if ((args[0] == "exit") || (args[0] == "quit"))
         {

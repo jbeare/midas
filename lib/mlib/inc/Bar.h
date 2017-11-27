@@ -2,6 +2,7 @@
 
 #include <ctime>
 #include <string>
+#include <SimpleMatrix.h>
 
 enum class BarResolution
 {
