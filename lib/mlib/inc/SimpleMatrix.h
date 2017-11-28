@@ -53,6 +53,8 @@ public:
                 m_matrix.push_back(Convert<T>(cell));
             }
         }
+
+        ifs.close();
     }
 
     RowRef<T> Row(uint32_t index) const
@@ -78,6 +80,32 @@ public:
     std::vector<T> const& GetVector() const
     {
         return m_matrix;
+    }
+
+    void Save(std::string name) const
+    {
+        std::ofstream ofs;
+        ofs.open(name);
+
+        for (uint32_t i = 0; i < NumRows(); i++)
+        {
+            auto row = Row(i);
+            for (uint32_t j = 0; j < NumCols(); j++)
+            {
+                if (j != 0)
+                {
+                    ofs << ",";
+                    ofs << row[j];
+                }
+                else
+                {
+                    ofs << static_cast<int64_t>(row[j]);
+                }
+            }
+            ofs << "\n";
+        }
+
+        ofs.close();
     }
 
 private:

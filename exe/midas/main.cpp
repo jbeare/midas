@@ -271,6 +271,18 @@ void DoQQTrainingGeneratorStuff()
     }
 }
 
+void DoTwsDataBrowserStuff()
+{
+    auto db = TwsDataBrowser::MakeShared("D:\\codestore\\stockmarket\\TwsStockData");
+
+    //int tm_mday;  // day of the month - [1, 31]
+    //int tm_mon;   // months since January - [0, 11]
+    //int tm_year;  // years since 1900
+    std::tm start{0, 0, 0, 20, 9, 117};
+    std::tm end{0, 0, 0, 1, 10, 117};
+    auto bars = db->GetBars("MSFT", BarResolution::Minute, mktime(&start), mktime(&end));
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
     while (1)
@@ -279,8 +291,9 @@ int main(int /*argc*/, char** /*argv*/)
         //DoFeatureFindingStuff();
         //DoDataBrowserStuff();
         //DoQuantQuoteStuff();
-        DoQQFeatureFindingStuff();
+        //DoQQFeatureFindingStuff();
         //DoQQTrainingGeneratorStuff();
+        DoTwsDataBrowserStuff();
 
         system("pause");
     }

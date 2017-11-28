@@ -144,6 +144,7 @@
     <ClInclude Include="inc\SimpleMatrix.h" />
     <ClInclude Include="inc\Simulator.h" />
     <ClInclude Include="inc\Strategy.h" />
+    <ClInclude Include="inc\TimeUtil.h" />
     <ClInclude Include="inc\TrainingSetGenerator.h" />
     <ClInclude Include="inc\TwsDataBrowser.h" />
     <ClInclude Include="inc\UniqueHandle.h" />

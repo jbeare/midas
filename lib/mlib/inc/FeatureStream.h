@@ -23,10 +23,11 @@ public:
             throw MLibException(E_NOTIMPL);
         }
 
-        if (!m_queue.empty() && ((bar.Timestamp - m_queue.front().Timestamp) != 1))
-        {
-            m_queue.clear();
-        }
+        // TODO: This should give us better data but its making the outcomes worse.
+        //if (!m_queue.empty() && ((bar.Timestamp - m_queue.front().Timestamp) != 60))
+        //{
+        //    m_queue.clear();
+        //}
 
         m_queue.push_front(bar);
 

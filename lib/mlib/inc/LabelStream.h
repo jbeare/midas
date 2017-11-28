@@ -51,10 +51,10 @@ public:
         }
 
         // TODO: This should give us better data but its making the outcomes worse.
-        if ((bar_next.Timestamp - bar.Timestamp) != 1)
-        {
-            return std::vector<uint32_t>();
-        }
+        //if ((bar_next.Timestamp - bar.Timestamp) != 60)
+        //{
+        //    return std::vector<uint32_t>();
+        //}
 
         auto delta = bar_next.High - bar.Close;
 
