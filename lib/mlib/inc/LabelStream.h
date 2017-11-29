@@ -34,11 +34,11 @@ public:
 
         auto delta = (bar_next.Close - bar.Close) / bar.Close;
 
-        for (uint32_t i = static_cast<uint32_t>(m_config.size()); i > 0; i--)
+        for (uint32_t i = 0; i < static_cast<uint32_t>(m_config.size()); i++)
         {
-            if (delta >= m_config[i - 1])
+            if (delta >= m_config[i])
             {
-                return {i};
+                return {static_cast<uint32_t>(m_config.size()) - i};
             }
         }
 

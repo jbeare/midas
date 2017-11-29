@@ -66,7 +66,7 @@ public:
 #pragma region DataBrowser
     virtual std::vector<std::string> GetSymbols()
     {
-        return {"MSFT", "TSLA", "AMZN", "AAPL"};
+        return {"MSFT", "TSLA", "AMZN", "AAPL", "FB", "NVDA", "CSCO"};
     }
 
     virtual BarResolution GetNativeBarResolution()

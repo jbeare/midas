@@ -40,6 +40,7 @@ public:
     {
         if (labelCount > 2)
         {
+            // The code that implements this below is broken.
             throw MLibException(E_NOTIMPL);
         }
 
@@ -58,12 +59,49 @@ public:
             fs >> testingFs;
         }
 
-        for (double config = -0.01; config < 0.01; config += 0.00001)
+        if (labelCount == 2)
         {
-            m_workPool.QueueWork([&, config]()
+            for (double config = -0.01; config < 0.01; config += 0.00001)
             {
-                _FindLabelConfig(trainingBars, testingBars, trainingFs, testingFs, dimensionCount, LabelConfig{config});
-            });
+                m_workPool.QueueWork([&, config]()
+                {
+                    _FindLabelConfig(trainingBars, testingBars, trainingFs, testingFs, dimensionCount, LabelConfig{config});
+                });
+            }
+        }
+        else
+        {
+            std::vector<double> deltas;
+            for (int i = 1; i < trainingBars.size(); i++)
+            {
+                double delta = (trainingBars[i].Close - trainingBars[i - 1].Close) / trainingBars[i].Close;
+                if (delta > 0)
+                {
+                    deltas.push_back(delta);
+                }
+            }
+            std::sort(deltas.begin(), deltas.end());
+
+            LabelConfig config;
+            for (uint32_t i = 0; i < labelCount; i++)
+            {
+                int index = static_cast<int>(deltas.size() / (labelCount + 1)) * (i + 1);
+                config.push_back(deltas[index]);
+            }
+            std::sort(config.rbegin(), config.rend());
+
+            for (double adjustment = -0.01; adjustment < 0.01; adjustment += 0.00001)
+            {
+                m_workPool.QueueWork([&, config, adjustment]()
+                {
+                    auto temp = config;
+                    for (auto& c : temp)
+                    {
+                        c += adjustment;
+                    }
+                    _FindLabelConfig(trainingBars, testingBars, trainingFs, testingFs, dimensionCount, config);
+                });
+            }
         }
 
         m_workPool.WaitForCompletion();
