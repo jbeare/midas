@@ -8,8 +8,9 @@
 #include <FeatureStream.h>
 #include <LabelStream.h>
 #include <Analyzer.h>
+#include <LabelFinder.h>
 
-template<class F = DefaultFeatureSet, class L = DefaultLabelPolicy>
+template<class F = DefaultFeatureSet>
 class Simulator
 {
 public:
@@ -20,19 +21,19 @@ public:
 
     }
 
-    void Run()
+    void Run(std::time_t start, std::time_t end)
     {
-        ExtractDataBrowserBars();
+        ExtractDataBrowserBars(start, end);
         TrainClassifier();
         Simulate();
     }
 
 private:
-    void ExtractDataBrowserBars()
+    void ExtractDataBrowserBars(std::time_t start, std::time_t end)
     {
         for (auto const& symbol : m_dataBrowser->GetSymbols())
         {
-            m_barMap[symbol].first = {m_dataBrowser->GetBars(symbol, BarResolution::Minute, 0u, m_dataBrowser->GetBarCount(symbol, BarResolution::Minute) - 1)};
+            m_barMap[symbol].first = {m_dataBrowser->GetBars(symbol, BarResolution::Minute, start, end)};
             m_barMap[symbol].second = m_barMap[symbol].first.begin();
         }
     }
@@ -41,12 +42,16 @@ private:
     {
         for (auto const& bars : m_barMap)
         {
+            LabelFinder labelFinder;
+
+            auto configs = labelFinder.FindLabelConfig(bars.second.first, bars.second.first, 5, 2);
+
             FeatureStream<F> fs;
             std::vector<FeatureSet> f;
             fs << bars.second.first;
             fs >> f;
 
-            LabelStream<L> ls;
+            LabelStream ls(configs[0].Config);
             std::vector<BarLabel> l;
             ls << bars.second.first;
             ls >> l;
@@ -56,12 +61,12 @@ private:
             auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
             auto labels = VectorFromLabelVector(std::get<2>(data));
 
-            m_classifierMap[bars.first] = Classifier::MakeShared(L::LabelCount, m_strategy->Dimensions());
+            m_classifierMap[bars.first] = Classifier::MakeShared(ls.LabelCount(), m_strategy->Dimensions());
             m_classifierMap[bars.first]->Train(features, labels, true);
 
-            /*std::vector<uint32_t> results = m_classifierMap[bars.first]->Classify(features);
+            std::vector<uint32_t> results = m_classifierMap[bars.first]->Classify(features);
             std::cout << bars.first << std::endl;
-            Analyzer::Analyze(raw, labels, results).Print();*/
+            Analyzer::Analyze2(raw, labels, results).Print2();
         }
     }
 
@@ -103,6 +108,8 @@ private:
         auto timeslice = GetNextTimeslice();
         while (!timeslice.empty())
         {
+            bool tradeExecuted{false};
+
             for (auto& bar : timeslice)
             {
                 streamMap[bar.first] << std::vector<Bar>{bar.second};
@@ -116,12 +123,15 @@ private:
                 if (!featureSet.empty())
                 {
                     auto c = m_classifierMap[stream.first]->Classify(featureSet.back().Features);
-
+                    if (c)
+                    {
+                        tradeExecuted = true;
+                    }
                     printf("%4s:%2u  ", stream.first.c_str(), c);
                 }
             }
 
-            printf("\n");
+            printf("****:%2d\n", tradeExecuted ? 1 : 0);
             timeslice = GetNextTimeslice();
         }
     }

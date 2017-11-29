@@ -16,8 +16,8 @@ struct FeatureCombination
 {
     double Score() const
     {
-        //return Details.actGainTotal + Details.loss;
-        return Details.netSpread[1] + Details.netSpread[2] + Details.netSpread[3] + Details.netSpread[4] + Details.netSpread[5] + Details.netSpread[6] + Details.netSpread[7];
+        auto net = Details.netSpread[1] + Details.netSpread[2] + Details.netSpread[3] + Details.netSpread[4] + Details.netSpread[5] + Details.netSpread[6] + Details.netSpread[7];
+        return net - (Details.trades * 0.005);
     }
 
     void Print() const

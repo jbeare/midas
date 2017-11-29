@@ -69,6 +69,12 @@
     <ClInclude Include="inc\TimeUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\LabelFinder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\WorkPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

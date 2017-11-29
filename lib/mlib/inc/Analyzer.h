@@ -46,6 +46,39 @@ struct Analysis
         printf("\n");
     }
 
+    void Print2() const
+    {
+        double gain = gainSpread[1] + gainSpread[2] + gainSpread[3] + gainSpread[4] + gainSpread[5] + gainSpread[6] + gainSpread[7];
+        double losss = lossSpread[1] + lossSpread[2] + lossSpread[3] + lossSpread[4] + lossSpread[5] + lossSpread[6] + lossSpread[7];
+        double net = netSpread[1] + netSpread[2] + netSpread[3] + netSpread[4] + netSpread[5] + netSpread[6] + netSpread[7];
+
+        printf("Trades: %d Good: %d Bad(+): %d Bad(-): %d Opps: %d\n", trades, goodTrades, gainOnBadTrade, lossOnBadTrade, opportunities);
+
+        printf("\n        1     |        2      |        3      |        4      |        5      |        6      |        7\n");
+        printf("%6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f | %6.2f %6.2f\n",
+            gainSpread[1], lossSpread[1],
+            gainSpread[2], lossSpread[2],
+            gainSpread[3], lossSpread[3],
+            gainSpread[4], lossSpread[4],
+            gainSpread[5], lossSpread[5],
+            gainSpread[6], lossSpread[6],
+            gainSpread[7], lossSpread[7]);
+
+        printf("\n        0     |        1      |        2      |        3      |        4      |        5      |        6\n");
+        printf("%6d %6d | %6d %6d | %6d %6d | %6d %6d | %6d %6d | %6d %6d | %6d %6d\n",
+            resultSpread[0], labelSpread[0],
+            resultSpread[1], labelSpread[1],
+            resultSpread[2], labelSpread[2],
+            resultSpread[3], labelSpread[3],
+            resultSpread[4], labelSpread[4],
+            resultSpread[5], labelSpread[5],
+            resultSpread[6], labelSpread[6]);
+
+        printf("Gain: %f Loss: %f Net %f\n", gain, losss, net);
+        printf("Overhead: %f Net:%f\n", trades * 0.005, net - (trades * 0.005));
+        printf("\n");
+    }
+
     double maxGain[8]{};
     double actGain[8]{};
     int labelSpread[8]{};

@@ -138,6 +138,7 @@
     <ClInclude Include="inc\FeatureFinder.h" />
     <ClInclude Include="inc\FeatureStream.h" />
     <ClInclude Include="inc\GoogleDataBrowser.h" />
+    <ClInclude Include="inc\LabelFinder.h" />
     <ClInclude Include="inc\LabelStream.h" />
     <ClInclude Include="inc\MLibException.h" />
     <ClInclude Include="inc\QuantQuoteDataBrowser.h" />
@@ -148,6 +149,7 @@
     <ClInclude Include="inc\TrainingSetGenerator.h" />
     <ClInclude Include="inc\TwsDataBrowser.h" />
     <ClInclude Include="inc\UniqueHandle.h" />
+    <ClInclude Include="inc\WorkPool.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

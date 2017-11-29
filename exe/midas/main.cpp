@@ -13,6 +13,7 @@
 #include <FeatureStream.h>
 #include <LabelStream.h>
 #include <TrainingSetGenerator.h>
+#include <LabelFinder.h>
 
 /*SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -93,7 +94,7 @@ void DoDataBrowserStuff()
         fs << bars;
         fs >> f;
 
-        LabelStream<> ls;
+        LabelStream ls;
         std::vector<BarLabel> l;
         ls << bars;
         ls >> l;
@@ -135,7 +136,7 @@ void DoQuantQuoteStuff()
         fs << bars;
         fs >> f;
 
-        LabelStream<> ls;
+        LabelStream ls;
         std::vector<BarLabel> l;
         ls << bars;
         ls >> l;
@@ -172,7 +173,7 @@ void DoQQFeatureFindingStuff()
     fs << bars;
     fs >> f;
 
-    LabelStream<> ls;
+    LabelStream ls;
     std::vector<BarLabel> l;
     ls << bars;
     ls >> l;
@@ -223,7 +224,7 @@ void DoQQTrainingGeneratorStuff()
         fs << bars;
         fs >> f;
 
-        LabelStream<> ls;
+        LabelStream ls;
         std::vector<BarLabel> l;
         ls << bars;
         ls >> l;
@@ -281,6 +282,56 @@ void DoTwsDataBrowserStuff()
     std::tm start{0, 0, 0, 20, 9, 117};
     std::tm end{0, 0, 0, 1, 10, 117};
     auto bars = db->GetBars("MSFT", BarResolution::Minute, mktime(&start), mktime(&end));
+
+    {
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        auto c = Classifier::MakeShared(8, 5);
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print2();
+    }
+}
+
+void DoTwsLabelFindingStuff()
+{
+    auto db = TwsDataBrowser::MakeShared("D:\\codestore\\stockmarket\\TwsStockData");
+
+    //int tm_mday;  // day of the month - [1, 31]
+    //int tm_mon;   // months since January - [0, 11]
+    //int tm_year;  // years since 1900
+    std::tm start{0, 0, 0, 20, 9, 117};
+    std::tm end{0, 0, 0, 1, 10, 117};
+    auto bars = db->GetBars("MSFT", BarResolution::Minute, mktime(&start), mktime(&end));
+
+    LabelFinder labelFinder;
+
+    auto results = labelFinder.FindLabelConfig(bars, bars, 5, 2);
+}
+
+void DoSimulatorStuff()
+{
+    auto db = TwsDataBrowser::MakeShared("D:\\codestore\\stockmarket\\TwsStockData");
+
+    Simulator<> s(db, std::make_shared<DefaultStrategy>());
+
+    std::tm start{0, 0, 0, 20, 9, 117};
+    std::tm end{0, 0, 0, 1, 10, 117};
+    s.Run(mktime(&start), mktime(&end));
 }
 
 int main(int /*argc*/, char** /*argv*/)
@@ -293,7 +344,9 @@ int main(int /*argc*/, char** /*argv*/)
         //DoQuantQuoteStuff();
         //DoQQFeatureFindingStuff();
         //DoQQTrainingGeneratorStuff();
-        DoTwsDataBrowserStuff();
+        //DoTwsDataBrowserStuff();
+        //DoTwsLabelFindingStuff();
+        DoSimulatorStuff();
 
         system("pause");
     }

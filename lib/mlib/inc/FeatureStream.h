@@ -12,7 +12,7 @@ class LargeFeatureSet2
 {
 public:
     static constexpr uint32_t HistoryDepth{6};
-    static constexpr uint32_t FeatureCount{44};
+    static constexpr uint32_t FeatureCount{20};
 
     LargeFeatureSet2() {}
 
@@ -65,8 +65,8 @@ public:
             GetDelta(m_queue[0].Low,    m_queue[1].Low),
             GetDelta(m_queue[0].Close,  m_queue[1].Close),
             GetDelta(m_queue[0].Close,  m_queue[1].Open),
-            GetDelta(m_queue[0].High,   m_queue[1].Low),
-            GetDelta(m_queue[0].Open,   m_queue[2].Open),
+            GetDelta(m_queue[0].High,   m_queue[1].Low)
+            /*GetDelta(m_queue[0].Open,   m_queue[2].Open),
             GetDelta(m_queue[0].High,   m_queue[2].High),
             GetDelta(m_queue[0].Low,    m_queue[2].Low),
             GetDelta(m_queue[0].Close,  m_queue[2].Close),
@@ -89,7 +89,7 @@ public:
             GetDelta(m_queue[0].Low,    m_queue[5].Low),
             GetDelta(m_queue[0].Close,  m_queue[5].Close),
             GetDelta(m_queue[0].Close,  m_queue[5].Open),
-            GetDelta(m_queue[0].High,   m_queue[5].Low)
+            GetDelta(m_queue[0].High,   m_queue[5].Low)*/
         };
     }
 
