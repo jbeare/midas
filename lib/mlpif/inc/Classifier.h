@@ -27,4 +27,7 @@ public:
     virtual void Load(_In_ std::string const& name) = 0;
 
     virtual void Store(_In_ std::string const& name) = 0;
+
+    template<typename Archive>
+    void serialize(_Inout_ Archive& ar, _In_ const unsigned int = 0);
 };

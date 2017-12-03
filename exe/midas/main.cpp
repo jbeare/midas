@@ -14,6 +14,8 @@
 #include <LabelStream.h>
 #include <TrainingSetGenerator.h>
 #include <LabelFinder.h>
+//#include "Midas.h"
+#include <Ensemble.h>
 
 /*SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -334,6 +336,11 @@ void DoSimulatorStuff()
     s.Run(mktime(&start), mktime(&end));
 }
 
+void DoMidasStuff()
+{
+
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
     while (1)
@@ -346,7 +353,8 @@ int main(int /*argc*/, char** /*argv*/)
         //DoQQTrainingGeneratorStuff();
         //DoTwsDataBrowserStuff();
         //DoTwsLabelFindingStuff();
-        DoSimulatorStuff();
+        //DoSimulatorStuff();
+        DoMidasStuff();
 
         system("pause");
     }

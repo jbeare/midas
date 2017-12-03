@@ -135,12 +135,14 @@
     <ClInclude Include="inc\Bar.h" />
     <ClInclude Include="inc\Combination.h" />
     <ClInclude Include="inc\DataBrowser.h" />
+    <ClInclude Include="inc\Ensemble.h" />
     <ClInclude Include="inc\FeatureFinder.h" />
     <ClInclude Include="inc\FeatureStream.h" />
     <ClInclude Include="inc\GoogleDataBrowser.h" />
     <ClInclude Include="inc\LabelFinder.h" />
     <ClInclude Include="inc\LabelStream.h" />
     <ClInclude Include="inc\MLibException.h" />
+    <ClInclude Include="inc\Persistance.h" />
     <ClInclude Include="inc\QuantQuoteDataBrowser.h" />
     <ClInclude Include="inc\SimpleMatrix.h" />
     <ClInclude Include="inc\Simulator.h" />

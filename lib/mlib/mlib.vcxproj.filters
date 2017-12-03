@@ -75,6 +75,12 @@
     <ClInclude Include="inc\WorkPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\Ensemble.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Persistance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

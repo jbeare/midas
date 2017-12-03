@@ -52,7 +52,7 @@ public:
         {
             std::ifstream ifs(indexPath.string(), std::ios::binary);
             boost::archive::binary_iarchive ar(ifs);
-            Serialize<boost::archive::binary_iarchive>(ar);
+            serialize<boost::archive::binary_iarchive>(ar);
             return;
         }*/
 
@@ -60,7 +60,7 @@ public:
 
         /*std::ofstream ofs(indexPath.string(), std::ios::binary);
         boost::archive::binary_oarchive ar(ofs);
-        Serialize<boost::archive::binary_oarchive>(ar);*/
+        serialize<boost::archive::binary_oarchive>(ar);*/
     }
 
 #pragma region DataBrowser
@@ -288,7 +288,7 @@ private:
     }
 
     template<typename Archive>
-    void Serialize(Archive& ar)
+    void serialize(Archive& ar, const unsigned int = 0)
     {
         ar & m_index;
     }

@@ -57,7 +57,7 @@ public:
     }
 
     template<typename Archive>
-    void Serialize(Archive& ar)
+    void serialize(Archive& ar, const unsigned int = 0)
     {
         ar & mlpack::data::CreateNVP(m_eigenVectors, "Pca_m_eigenVectors");
         ar & mlpack::data::CreateNVP(m_mean, "Pca_m_mean");
@@ -146,24 +146,24 @@ public:
     {
         std::ifstream ifs(name, std::ios::binary);
         boost::archive::xml_iarchive ar(ifs);
-        Serialize<boost::archive::xml_iarchive>(ar);
+        serialize<boost::archive::xml_iarchive>(ar);
     }
 
     virtual void Store(_In_ std::string const& name)
     {
         std::ofstream ofs(name, std::ios::binary);
         boost::archive::xml_oarchive ar(ofs);
-        Serialize<boost::archive::xml_oarchive>(ar);
+        serialize<boost::archive::xml_oarchive>(ar);
     }
 #pragma endregion
 
     template<typename Archive>
-    void Serialize(Archive& ar)
+    void serialize(Archive& ar, const unsigned int = 0)
     {
         ar & mlpack::data::CreateNVP(m_classes, "ClassifierImpl_m_classes");
         ar & mlpack::data::CreateNVP(m_dimensions, "ClassifierImpl_m_dimensions");
         ar & mlpack::data::CreateNVP(m_features, "ClassifierImpl_m_features");
-        m_pca->Serialize<Archive>(ar);
+        ar & boost::serialization::make_nvp("ClassifierImpl_m_pca", *m_pca);
         m_nbc.Serialize<Archive>(ar, 0);
     }
 
@@ -220,4 +220,12 @@ _Use_decl_annotations_
 std::shared_ptr<Classifier> Classifier::MakeShared(std::string const& name)
 {
     return std::make_shared<ClassifierImpl>(name);
+}
+
+_Use_decl_annotations_
+template<typename Archive>
+void Classifier::serialize(Archive& ar, const unsigned int)
+{
+    auto impl = dynamic_cast<ClassifierImpl*>(this);
+    ar & impl;
 }
