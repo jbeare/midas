@@ -81,6 +81,9 @@
     <ClInclude Include="inc\Persistance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\TwsMock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

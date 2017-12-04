@@ -65,7 +65,7 @@ struct BarLabel : BarBase
     uint32_t Label{};
 };
 
-SimpleMatrix<double> SimpleMatrixFromBarVector(std::vector<Bar> const& bars)
+inline SimpleMatrix<double> SimpleMatrixFromBarVector(std::vector<Bar> const& bars)
 {
     std::vector<double> dataVector;
 
@@ -82,7 +82,7 @@ SimpleMatrix<double> SimpleMatrixFromBarVector(std::vector<Bar> const& bars)
     return SimpleMatrix<double>(dataVector, static_cast<uint32_t>(bars.size()), static_cast<uint32_t>(dataVector.size() / bars.size()));
 }
 
-SimpleMatrix<double> SimpleMatrixFromFeatureSetVector(std::vector<FeatureSet> const& featureSets)
+inline SimpleMatrix<double> SimpleMatrixFromFeatureSetVector(std::vector<FeatureSet> const& featureSets)
 {
     std::vector<double> dataVector;
 
@@ -94,7 +94,7 @@ SimpleMatrix<double> SimpleMatrixFromFeatureSetVector(std::vector<FeatureSet> co
     return SimpleMatrix<double>(dataVector, static_cast<uint32_t>(featureSets.size()), static_cast<uint32_t>(dataVector.size() / featureSets.size()));
 }
 
-std::vector<uint32_t> VectorFromLabelVector(std::vector<BarLabel> const& labels)
+inline std::vector<uint32_t> VectorFromLabelVector(std::vector<BarLabel> const& labels)
 {
     std::vector<uint32_t> dataVector;
 
@@ -106,7 +106,7 @@ std::vector<uint32_t> VectorFromLabelVector(std::vector<BarLabel> const& labels)
     return dataVector;
 }
 
-std::tuple<std::vector<Bar>, std::vector<FeatureSet>, std::vector<BarLabel>> AlignTimestamps(std::vector<Bar> const& bars, std::vector<FeatureSet> const& featureSets, std::vector<BarLabel> const& labels)
+inline std::tuple<std::vector<Bar>, std::vector<FeatureSet>, std::vector<BarLabel>> AlignTimestamps(std::vector<Bar> const& bars, std::vector<FeatureSet> const& featureSets, std::vector<BarLabel> const& labels)
 {
     std::vector<Bar> alignedBars;
     std::vector<FeatureSet> alignedFeatureSets;

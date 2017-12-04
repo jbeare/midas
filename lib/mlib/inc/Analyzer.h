@@ -76,6 +76,7 @@ struct Analysis
 
         printf("Gain: %f Loss: %f Net %f\n", gain, losss, net);
         printf("Overhead: %f Net:%f\n", trades * 0.005, net - (trades * 0.005));
+        printf("Net per trade: %f\n", (net - (trades * 0.005)) / trades);
         printf("\n");
     }
 

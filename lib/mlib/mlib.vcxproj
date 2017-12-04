@@ -150,6 +150,7 @@
     <ClInclude Include="inc\TimeUtil.h" />
     <ClInclude Include="inc\TrainingSetGenerator.h" />
     <ClInclude Include="inc\TwsDataBrowser.h" />
+    <ClInclude Include="inc\TwsMock.h" />
     <ClInclude Include="inc\UniqueHandle.h" />
     <ClInclude Include="inc\WorkPool.h" />
   </ItemGroup>

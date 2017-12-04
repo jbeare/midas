@@ -14,8 +14,9 @@
 #include <LabelStream.h>
 #include <TrainingSetGenerator.h>
 #include <LabelFinder.h>
-//#include "Midas.h"
+#include "Midas.h"
 #include <Ensemble.h>
+#include <TwsMock.h>
 
 /*SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -336,9 +337,212 @@ void DoSimulatorStuff()
     s.Run(mktime(&start), mktime(&end));
 }
 
+void DoEnsembleStuff()
+{
+    auto db = TwsDataBrowser::MakeShared("D:\\codestore\\stockmarket\\TwsStockData");
+
+    //int tm_mday;  // day of the month - [1, 31]
+    //int tm_mon;   // months since January - [0, 11]
+    //int tm_year;  // years since 1900
+    std::tm start{0, 0, 0, 20, 9, 117};
+    std::tm end{0, 0, 0, 1, 10, 117};
+    auto bars1 = db->GetBars("MSFT", BarResolution::Minute, mktime(&start), mktime(&end));
+
+    start = {0, 0, 0, 25, 9, 117};
+    end = {0, 0, 0, 1, 10, 117};
+    auto bars2 = db->GetBars("MSFT", BarResolution::Minute, mktime(&start), mktime(&end));
+
+    start = {0, 0, 0, 1, 10, 117};
+    end = {0, 0, 0, 1, 10, 117};
+    auto bars3 = db->GetBars("MSFT", BarResolution::Minute, mktime(&start), mktime(&end));
+
+    auto c1 = Classifier::MakeShared(8, 5);
+    auto c2 = Classifier::MakeShared(8, 5);
+    auto c3 = Classifier::MakeShared(8, 5);
+
+    {
+        auto const& bars = bars1;
+        auto& c = c1;
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print2();
+    }
+
+    {
+        auto const& bars = bars2;
+        auto& c = c2;
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print2();
+    }
+
+    {
+        auto const& bars = bars3;
+        auto& c = c3;
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print2();
+    }
+
+    auto e = Ensemble::MakeShared({c1, c2, c3});
+    
+    {
+        auto const& bars = bars1;
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        results = e->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print2();
+    }
+
+    {
+        auto const& bars = bars2;
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        results = e->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print2();
+    }
+
+    {
+        auto const& bars = bars3;
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls;
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        results = e->Classify(features);
+        Analyzer::Analyze2(raw, labels, results).Print2();
+    }
+}
+
 void DoMidasStuff()
 {
+    auto db = TwsDataBrowser::MakeShared("D:\\codestore\\stockmarket\\TwsStockData");
+    auto symbols = db->GetSymbols();
+    std::tm start{0, 0, 0, 30, 9, 117};
+    std::tm end{0, 0, 0, 1, 10, 117};
+    auto tws = TwsMock::MakeShared(db, symbols, mktime(&start), mktime(&end));
+    Midas::ClassifierMap map;
 
+    for (auto const& symbol : symbols)
+    {
+        auto bars = db->GetBars(symbol, BarResolution::Minute, mktime(&start), mktime(&end));
+
+        LabelFinder labelFinder;
+        auto labelFinderResult = labelFinder.FindLabelConfig(bars, bars, 5, 2);
+
+        FeatureStream<> fs;
+        std::vector<FeatureSet> f;
+        fs << bars;
+        fs >> f;
+
+        LabelStream ls(labelFinderResult[0].Config);
+        std::vector<BarLabel> l;
+        ls << bars;
+        ls >> l;
+
+        auto data = AlignTimestamps(bars, f, l);
+        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+        auto labels = VectorFromLabelVector(std::get<2>(data));
+
+        std::vector<uint32_t> results;
+        auto c = Classifier::MakeShared(8, 5);
+        c->Train(features, labels, true);
+        results = c->Classify(features);
+        auto a = Analyzer::Analyze2(raw, labels, results);
+        a.Print2();
+        map[symbol] = {c, a};
+    }
+
+    auto midas = Midas::MakeShared(map, tws);
+    midas->Trade();
 }
 
 int main(int /*argc*/, char** /*argv*/)
@@ -354,6 +558,7 @@ int main(int /*argc*/, char** /*argv*/)
         //DoTwsDataBrowserStuff();
         //DoTwsLabelFindingStuff();
         //DoSimulatorStuff();
+        //DoEnsembleStuff();
         DoMidasStuff();
 
         system("pause");

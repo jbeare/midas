@@ -105,7 +105,11 @@ public:
                     for (uint32_t i = 0; i < matrix.NumRows(); i++)
                     {
                         auto const& row = matrix.Row(i);
-                        bars.push_back({symbol, static_cast<std::time_t>(row[0]), resolution, row[1], row[2], row[3], row[4], row[5]});
+                        auto timeStamp = static_cast<std::time_t>(row[0]);
+                        if ((timeStamp >= start) && (timeStamp <= end))
+                        {
+                            bars.push_back({symbol, timeStamp, resolution, row[1], row[2], row[3], row[4], row[5]});
+                        }
                     }
                 }
             }
