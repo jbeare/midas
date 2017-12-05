@@ -554,9 +554,7 @@ void DoMidasStuff()
             map[symbol] = {c, a};
         }
 
-        //map["AAPL"].first->Store("blah");
-        //Classifier* blah = const_cast<Classifier*>(map["AAPL"].first.get());
-        //Persistance::Save(*blah, "ClassifierMap");
+        Persistance::Save(map, "ClassifierMap");
     }
 
     auto midas = Midas::MakeShared(map, tws);
@@ -566,7 +564,7 @@ void DoMidasStuff()
 void DoSerialStuff()
 {
     auto c = Classifier::MakeShared(2, 5);
-    c->Store("blah");
+    c->Save("blah");
     auto d = Classifier::MakeShared("blah");
 }
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!DOCTYPE boost_serialization>
+<boost_serialization signature="serialization::archive" version="14">
+<Persistance_object class_id="0" tracking_level="1" version="0" object_id="_0">
+	<I2 class_id="1" tracking_level="1" version="0" object_id="_1">
+		<p class_id="2" tracking_level="0" version="1">
+			<px class_id="4" class_name="C1" tracking_level="1" version="0" object_id="_2">
+				<I1 class_id="3" tracking_level="1" version="0" object_id="_3"></I1>
+			</px>
+		</p>
+	</I2>
+</Persistance_object>
+</boost_serialization>
+

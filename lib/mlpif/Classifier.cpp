@@ -145,7 +145,7 @@ public:
         return Classify(arma::Mat<double>{data})[0];
     }
 
-    virtual void Store(_In_ std::string const& name)
+    virtual void Save(_In_ std::string const& name)
     {
         Classifier* t = this;
         Persistance::Save(t, name);

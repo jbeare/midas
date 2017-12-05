@@ -24,7 +24,7 @@ public:
 
     virtual uint32_t Classify(_In_ std::vector<double> const& data) = 0;
 
-    virtual void Store(_In_ std::string const& name) = 0;
+    virtual void Save(_In_ std::string const& name) = 0;
 
     template<typename Archive>
     void serialize(_Inout_ Archive& ar, _In_ const unsigned int = 0);
