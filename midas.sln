@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "twscli", "tools\twscli\twsc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mlpif", "lib\mlpif\mlpif.vcxproj", "{C480214D-B063-4125-ABA3-4635766F5CCE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scratch", "test\scratch\scratch.vcxproj", "{F357E444-68F7-4788-A8EA-697DF54E9315}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +83,14 @@ Global
 		{C480214D-B063-4125-ABA3-4635766F5CCE}.Release|x64.Build.0 = Release|x64
 		{C480214D-B063-4125-ABA3-4635766F5CCE}.Release|x86.ActiveCfg = Release|Win32
 		{C480214D-B063-4125-ABA3-4635766F5CCE}.Release|x86.Build.0 = Release|Win32
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Debug|x64.ActiveCfg = Debug|x64
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Debug|x64.Build.0 = Debug|x64
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Debug|x86.ActiveCfg = Debug|Win32
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Debug|x86.Build.0 = Debug|Win32
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Release|x64.ActiveCfg = Release|x64
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Release|x64.Build.0 = Release|x64
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Release|x86.ActiveCfg = Release|Win32
+		{F357E444-68F7-4788-A8EA-697DF54E9315}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

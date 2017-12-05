@@ -217,20 +217,20 @@ _Use_decl_annotations_
 std::shared_ptr<Classifier> Classifier::MakeShared(std::string const& name)
 {
     std::shared_ptr<Classifier> classifier = std::make_shared<ClassifierImpl>();
-    Persistance::Load(classifier, name);
+    auto p = classifier.get();
+    Persistance::Load(p, name);
     return classifier;
 }
 
 _Use_decl_annotations_
 template<typename Archive>
-void Classifier::serialize(Archive& ar, const unsigned int)
+void Classifier::serialize(Archive&, const unsigned int)
 {
-    ar.template register_type<ClassifierImpl>();
-    //auto impl = dynamic_cast<ClassifierImpl*>(this);
-    //ar & boost::serialization::make_nvp("Classifier_impl", impl);
+
 }
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Classifier)
-BOOST_CLASS_EXPORT_GUID(ClassifierImpl, "ClassifierImpl")
+BOOST_CLASS_EXPORT(Classifier)
+BOOST_CLASS_EXPORT(ClassifierImpl)
 
 #pragma warning(default : 4251)

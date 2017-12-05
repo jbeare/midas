@@ -565,8 +565,8 @@ void DoMidasStuff()
 
 void DoSerialStuff()
 {
-    //auto c = Classifier::MakeShared(2, 5);
-    //c->Store("blah");
+    auto c = Classifier::MakeShared(2, 5);
+    c->Store("blah");
     auto d = Classifier::MakeShared("blah");
 }
 
@@ -584,8 +584,8 @@ int main(int /*argc*/, char** /*argv*/)
         //DoTwsLabelFindingStuff();
         //DoSimulatorStuff();
         //DoEnsembleStuff();
-        DoMidasStuff();
-        //DoSerialStuff();
+        //DoMidasStuff();
+        DoSerialStuff();
 
         system("pause");
     }

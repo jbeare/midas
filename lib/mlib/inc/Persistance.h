@@ -26,7 +26,7 @@ namespace Persistance
     }
 
     template<class T>
-    static void Save(_In_ T const& object, _In_ std::string const& name)
+    static void Save(_In_ T& object, _In_ std::string const& name)
     {
         std::ofstream ofs(name, std::ios::binary);
         boost::archive::xml_oarchive ar(ofs);
