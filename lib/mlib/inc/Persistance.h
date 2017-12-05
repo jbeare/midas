@@ -18,7 +18,7 @@
 namespace Persistance
 {
     template<class T>
-    static void Load(_Out_ T& object, _In_ std::string const& name)
+    inline void Load(_Out_ T& object, _In_ std::string const& name)
     {
         std::ifstream ifs(name, std::ios::binary);
         boost::archive::xml_iarchive ar(ifs);
@@ -26,7 +26,7 @@ namespace Persistance
     }
 
     template<class T>
-    static void Save(_In_ T& object, _In_ std::string const& name)
+    inline void Save(_In_ T& object, _In_ std::string const& name)
     {
         std::ofstream ofs(name, std::ios::binary);
         boost::archive::xml_oarchive ar(ofs);

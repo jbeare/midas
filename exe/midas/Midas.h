@@ -10,11 +10,52 @@
 #include <Analyzer.h>
 #include <TwsMock.h>
 #include <FeatureStream.h>
+#include <Persistance.h>
+
+typedef std::map<std::string, std::pair<std::shared_ptr<Classifier>, Analysis>> ClassifierMap;
+
+namespace Persistance
+{
+    typedef std::map<std::string, std::pair<std::string, Analysis>> SerializedClassifierMap;
+
+    template<>
+    inline void Load<ClassifierMap>(_Out_ ClassifierMap& object, _In_ std::string const& name)
+    {
+        std::ifstream ifs(name, std::ios::binary);
+        boost::archive::xml_iarchive ar(ifs);
+
+        SerializedClassifierMap map;
+        ar & boost::serialization::make_nvp("Persistance_map", map);
+
+        for (auto const& element : map)
+        {
+            auto p = Classifier::MakeShared(element.second.first);
+            object[element.first] = {p, element.second.second};
+        }
+    }
+
+    template<>
+    inline void Save<ClassifierMap>(_In_ ClassifierMap& object, _In_ std::string const& name)
+    {
+        std::ofstream ofs(name, std::ios::binary);
+        boost::archive::xml_oarchive ar(ofs);
+
+        SerializedClassifierMap map;
+
+        for (auto const& element : object)
+        {
+            auto path = name + "_" + element.first;
+            element.second.first->Save(path);
+            map[element.first] = {path, element.second.second};
+        }
+
+        ar & boost::serialization::make_nvp("Persistance_map", map);
+    }
+}
 
 class Midas
 {
 public:
-    typedef std::map<std::string, std::pair<std::shared_ptr<Classifier>, Analysis>> ClassifierMap;
     static std::shared_ptr<Midas> MakeShared(_In_ ClassifierMap classifierMap, _In_ std::shared_ptr<Tws> tws)
     {
         return std::make_shared<Midas>(classifierMap, tws);

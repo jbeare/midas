@@ -508,12 +508,12 @@ void DoMidasStuff()
     auto symbols = db->GetSymbols();
     std::tm start{0, 0, 0, 30, 9, 117};
     std::tm end{0, 0, 0, 1, 10, 117};
-    auto tws = TwsMock::MakeShared(db, symbols, mktime(&start), mktime(&end));
-    Midas::ClassifierMap map;
+    
+    ClassifierMap map;
 
     try
     {
-        //Persistance::Load<Midas::ClassifierMap>(map, "ClassifierMap");
+        Persistance::Load<ClassifierMap>(map, "ClassifierMap");
     }
     catch (...)
     {
@@ -557,6 +557,7 @@ void DoMidasStuff()
         Persistance::Save(map, "ClassifierMap");
     }
 
+    auto tws = TwsMock::MakeShared(db, symbols, mktime(&start), mktime(&end));
     auto midas = Midas::MakeShared(map, tws);
     midas->Trade();
 }
@@ -582,8 +583,8 @@ int main(int /*argc*/, char** /*argv*/)
         //DoTwsLabelFindingStuff();
         //DoSimulatorStuff();
         //DoEnsembleStuff();
-        //DoMidasStuff();
-        DoSerialStuff();
+        DoMidasStuff();
+        //DoSerialStuff();
 
         system("pause");
     }

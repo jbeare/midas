@@ -216,9 +216,8 @@ std::shared_ptr<Classifier> Classifier::MakeShared(uint32_t classes, uint32_t di
 _Use_decl_annotations_
 std::shared_ptr<Classifier> Classifier::MakeShared(std::string const& name)
 {
-    std::shared_ptr<Classifier> classifier = std::make_shared<ClassifierImpl>();
-    auto p = classifier.get();
-    Persistance::Load(p, name);
+    auto classifier = std::make_shared<ClassifierImpl>();
+    Persistance::Load(*classifier, name);
     return classifier;
 }
 
