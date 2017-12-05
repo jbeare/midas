@@ -42,7 +42,7 @@ public:
     template<typename Archive>
     void serialize(Archive& ar, const unsigned int = 0)
     {
-        ar & m_classifiers;
+        ar & boost::serialization::make_nvp("Ensemble_m_classifiers", m_classifiers);
     }
 
 private:

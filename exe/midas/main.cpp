@@ -17,6 +17,7 @@
 #include "Midas.h"
 #include <Ensemble.h>
 #include <TwsMock.h>
+#include <Persistance.h>
 
 /*SimpleMatrix<double>
     aapl_data("AAPL_observations.csv"),
@@ -510,39 +511,63 @@ void DoMidasStuff()
     auto tws = TwsMock::MakeShared(db, symbols, mktime(&start), mktime(&end));
     Midas::ClassifierMap map;
 
-    for (auto const& symbol : symbols)
+    try
     {
-        auto bars = db->GetBars(symbol, BarResolution::Minute, mktime(&start), mktime(&end));
+        //Persistance::Load<Midas::ClassifierMap>(map, "ClassifierMap");
+    }
+    catch (...)
+    {
 
-        LabelFinder labelFinder;
-        auto labelFinderResult = labelFinder.FindLabelConfig(bars, bars, 5, 2);
+    }
 
-        FeatureStream<> fs;
-        std::vector<FeatureSet> f;
-        fs << bars;
-        fs >> f;
+    if (map.empty())
+    {
+        for (auto const& symbol : symbols)
+        {
+            std::cout << symbol << std::endl;
+            auto bars = db->GetBars(symbol, BarResolution::Minute, mktime(&start), mktime(&end));
 
-        LabelStream ls(labelFinderResult[0].Config);
-        std::vector<BarLabel> l;
-        ls << bars;
-        ls >> l;
+            LabelFinder labelFinder;
+            auto labelFinderResult = labelFinder.FindLabelConfig(bars, bars, 5, 2);
 
-        auto data = AlignTimestamps(bars, f, l);
-        auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
-        auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
-        auto labels = VectorFromLabelVector(std::get<2>(data));
+            FeatureStream<> fs;
+            std::vector<FeatureSet> f;
+            fs << bars;
+            fs >> f;
 
-        std::vector<uint32_t> results;
-        auto c = Classifier::MakeShared(8, 5);
-        c->Train(features, labels, true);
-        results = c->Classify(features);
-        auto a = Analyzer::Analyze2(raw, labels, results);
-        a.Print2();
-        map[symbol] = {c, a};
+            LabelStream ls(labelFinderResult[0].Config);
+            std::vector<BarLabel> l;
+            ls << bars;
+            ls >> l;
+
+            auto data = AlignTimestamps(bars, f, l);
+            auto raw = SimpleMatrixFromBarVector(std::get<0>(data));
+            auto features = SimpleMatrixFromFeatureSetVector(std::get<1>(data));
+            auto labels = VectorFromLabelVector(std::get<2>(data));
+
+            std::vector<uint32_t> results;
+            auto c = Classifier::MakeShared(2, 5);
+            c->Train(features, labels, true);
+            results = c->Classify(features);
+            auto a = Analyzer::Analyze2(raw, labels, results);
+            a.Print2();
+            map[symbol] = {c, a};
+        }
+
+        //map["AAPL"].first->Store("blah");
+        //Classifier* blah = const_cast<Classifier*>(map["AAPL"].first.get());
+        //Persistance::Save(*blah, "ClassifierMap");
     }
 
     auto midas = Midas::MakeShared(map, tws);
     midas->Trade();
+}
+
+void DoSerialStuff()
+{
+    //auto c = Classifier::MakeShared(2, 5);
+    //c->Store("blah");
+    auto d = Classifier::MakeShared("blah");
 }
 
 int main(int /*argc*/, char** /*argv*/)
@@ -560,6 +585,7 @@ int main(int /*argc*/, char** /*argv*/)
         //DoSimulatorStuff();
         //DoEnsembleStuff();
         DoMidasStuff();
+        //DoSerialStuff();
 
         system("pause");
     }

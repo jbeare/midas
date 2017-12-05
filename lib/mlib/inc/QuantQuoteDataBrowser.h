@@ -242,7 +242,7 @@ private:
     template<typename Archive>
     void serialize(Archive& ar, const unsigned int = 0)
     {
-        ar & m_index;
+        ar & boost::serialization::make_nvp("QuantQuoteDataBrowser_m_index", m_index);
     }
 
     // m_index[symbol][date] = path_to_csv

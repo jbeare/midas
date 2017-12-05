@@ -24,8 +24,6 @@ public:
 
     virtual uint32_t Classify(_In_ std::vector<double> const& data) = 0;
 
-    virtual void Load(_In_ std::string const& name) = 0;
-
     virtual void Store(_In_ std::string const& name) = 0;
 
     template<typename Archive>

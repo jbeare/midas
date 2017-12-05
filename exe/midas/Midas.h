@@ -9,6 +9,7 @@
 #include <UniqueHandle.h>
 #include <Analyzer.h>
 #include <TwsMock.h>
+#include <FeatureStream.h>
 
 class Midas
 {
@@ -40,11 +41,81 @@ public:
         t.join();*/
 
         std::vector<Bar> bars;
+        std::map<std::string, Bar> barMap;
+        std::string position;
+        double net{};
+        double buyPrice{};
         do
         {
             bars = std::dynamic_pointer_cast<TwsMock>(m_tws)->GetNextBars();
+            for (auto const& bar : bars)
+            {
+                barMap[bar.Symbol] = bar;
+            }
 
+            if (!position.empty())
+            {
+                double sellPrice = barMap[position].Close;
+                double shareCount = (1000 / buyPrice);
+                double netProfit = (sellPrice - buyPrice) * shareCount;
+                printf("Selling %.2f shares of %s at %.2f for net profit of %.4f\n", shareCount, position.c_str(), sellPrice, netProfit);
+                net += netProfit;
+            }
+
+            std::map<std::string, uint32_t> results;
+            for (auto& bar : bars)
+            {
+                auto classifier = m_classifierMap.find(bar.Symbol);
+                if (classifier == m_classifierMap.end())
+                {
+                    continue;
+                }
+
+                auto& fs = m_featureStreamMap[bar.Symbol];
+                std::vector<FeatureSet> f;
+                fs << std::vector<Bar>{bar};
+                fs >> f;
+
+                if (f.empty())
+                {
+                    continue;
+                }
+
+                results[bar.Symbol] = classifier->second.first->Classify(f[0].Features);
+                printf("%s: %u  ", bar.Symbol.c_str(), results[bar.Symbol]);
+            }
+            if (!bars.empty())
+            {
+                printf("\n");
+            }
+
+            std::string symbol;
+            double score{};
+            for (auto const& result : results)
+            {
+                if ((result.second > 0) && (m_classifierMap[result.first].second.Score() > score))
+                {
+                    score = m_classifierMap[result.first].second.Score();
+                    symbol = result.first;
+                }
+            }
+
+            if (!symbol.empty())
+            {
+                position = symbol;
+                buyPrice = barMap[symbol].Close;
+                double shareCount = (1000 / buyPrice);
+                printf("Buying %.2f shares of %s at %.2f\n", shareCount, position.c_str(), buyPrice);
+            }
+            else
+            {
+                position = "";
+                buyPrice = 0;
+                printf("No trade\n");
+            }
         } while (!bars.empty());
+
+        printf("Total net change: %f\n", net);
     }
 
 private:
@@ -68,7 +139,8 @@ private:
         }
     }
 
-    std::map<std::string, std::pair<std::shared_ptr<Classifier>, Analysis>> m_classifierMap;
+    ClassifierMap m_classifierMap;
+    std::map<std::string, FeatureStream<>> m_featureStreamMap;
     std::shared_ptr<Tws> m_tws;
     UniqueEvent m_halt{nullptr, true, false, nullptr};
     UniqueEvent m_wake{nullptr, false, false, nullptr};

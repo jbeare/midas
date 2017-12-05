@@ -76,8 +76,42 @@ struct Analysis
 
         printf("Gain: %f Loss: %f Net %f\n", gain, losss, net);
         printf("Overhead: %f Net:%f\n", trades * 0.005, net - (trades * 0.005));
-        printf("Net per trade: %f\n", (net - (trades * 0.005)) / trades);
+        printf("Net per trade: %f Net per dollar per trade: %f\n", ((net - (trades * 0.005)) / trades), ((net - (trades * 0.005)) / trades) / price);
         printf("\n");
+    }
+
+    double Score()
+    {
+        double net = netSpread[1] + netSpread[2] + netSpread[3] + netSpread[4] + netSpread[5] + netSpread[6] + netSpread[7];
+        return ((net - (trades * 0.005)) / trades) / price;
+    }
+
+    template<typename Archive>
+    void serialize(_Inout_ Archive& ar, _In_ const unsigned int = 0)
+    {
+        ar & boost::serialization::make_nvp("Analysis_maxGain", maxGain);
+        ar & boost::serialization::make_nvp("Analysis_actGain", actGain);
+        ar & boost::serialization::make_nvp("Analysis_labelSpread", labelSpread);
+        ar & boost::serialization::make_nvp("Analysis_resultSpread", resultSpread);
+        ar & boost::serialization::make_nvp("Analysis_correctSpread", correctSpread);
+        ar & boost::serialization::make_nvp("Analysis_underSpread", underSpread);
+        ar & boost::serialization::make_nvp("Analysis_overSpread", overSpread);
+        ar & boost::serialization::make_nvp("Analysis_samples", samples);
+        ar & boost::serialization::make_nvp("Analysis_correct", correct);
+        ar & boost::serialization::make_nvp("Analysis_under", under);
+        ar & boost::serialization::make_nvp("Analysis_over", over);
+        ar & boost::serialization::make_nvp("Analysis_loss", loss);
+        ar & boost::serialization::make_nvp("Analysis_trades", trades);
+        ar & boost::serialization::make_nvp("Analysis_goodTrades", goodTrades);
+        ar & boost::serialization::make_nvp("Analysis_opportunities", opportunities);
+        ar & boost::serialization::make_nvp("Analysis_lossOnBadTrade", lossOnBadTrade);
+        ar & boost::serialization::make_nvp("Analysis_gainOnBadTrade", gainOnBadTrade);
+        ar & boost::serialization::make_nvp("Analysis_maxGainTotal", maxGainTotal);
+        ar & boost::serialization::make_nvp("Analysis_actGainTotal", actGainTotal);
+        ar & boost::serialization::make_nvp("Analysis_gainSpread", gainSpread);
+        ar & boost::serialization::make_nvp("Analysis_lossSpread", lossSpread);
+        ar & boost::serialization::make_nvp("Analysis_netSpread", netSpread);
+        ar & boost::serialization::make_nvp("Analysis_price", price);
     }
 
     double maxGain[8]{};
@@ -104,6 +138,7 @@ struct Analysis
     double gainSpread[8]{};
     double lossSpread[8]{};
     double netSpread[8]{};
+    double price{};
 };
 
 class Analyzer
@@ -130,6 +165,7 @@ public:
             {
                 a.opportunities++;
             }
+            a.price += d0[1];
 
             double change = d1[4] - d0[4];
             if (change > 0)
@@ -187,6 +223,8 @@ public:
                 a.overSpread[results[i] - labels[i]]++;
             }
         }
+
+        a.price = a.price / data.NumRows();
 
         a.maxGain[0] = a.labelSpread[0] * 0;
         a.maxGain[1] = a.labelSpread[1] * 0.005;

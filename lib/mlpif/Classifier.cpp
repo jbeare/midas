@@ -12,6 +12,9 @@
 #pragma warning(default : 4348 4267 4244 4458 6285 6287 6011 28251)
 
 #include "Classifier.h"
+#include <Persistance.h>
+
+#pragma warning(disable : 4251)
 
 class Pca
 {
@@ -71,6 +74,11 @@ private:
 class ClassifierImpl : public Classifier
 {
 public:
+    ClassifierImpl()
+    {
+
+    }
+
     ClassifierImpl(_In_ uint32_t classes, _In_ uint32_t dimensions) :
         m_classes{classes},
         m_dimensions{dimensions},
@@ -78,11 +86,6 @@ public:
     {
 
     };
-
-    ClassifierImpl(_In_ std::string name)
-    {
-        Load(name);
-    }
 
 #pragma region Classifier
     virtual void Train(_In_ std::string const& trainingDataPath, _In_ std::string const& trainingLabelsPath, _In_ bool updatePca)
@@ -142,24 +145,18 @@ public:
         return Classify(arma::Mat<double>{data})[0];
     }
 
-    virtual void Load(_In_ std::string const& name)
-    {
-        std::ifstream ifs(name, std::ios::binary);
-        boost::archive::xml_iarchive ar(ifs);
-        serialize<boost::archive::xml_iarchive>(ar);
-    }
-
     virtual void Store(_In_ std::string const& name)
     {
-        std::ofstream ofs(name, std::ios::binary);
-        boost::archive::xml_oarchive ar(ofs);
-        serialize<boost::archive::xml_oarchive>(ar);
+        Classifier* t = this;
+        Persistance::Save(t, name);
     }
+
 #pragma endregion
 
     template<typename Archive>
     void serialize(Archive& ar, const unsigned int = 0)
     {
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Classifier);
         ar & mlpack::data::CreateNVP(m_classes, "ClassifierImpl_m_classes");
         ar & mlpack::data::CreateNVP(m_dimensions, "ClassifierImpl_m_dimensions");
         ar & mlpack::data::CreateNVP(m_features, "ClassifierImpl_m_features");
@@ -219,13 +216,21 @@ std::shared_ptr<Classifier> Classifier::MakeShared(uint32_t classes, uint32_t di
 _Use_decl_annotations_
 std::shared_ptr<Classifier> Classifier::MakeShared(std::string const& name)
 {
-    return std::make_shared<ClassifierImpl>(name);
+    std::shared_ptr<Classifier> classifier = std::make_shared<ClassifierImpl>();
+    Persistance::Load(classifier, name);
+    return classifier;
 }
 
 _Use_decl_annotations_
 template<typename Archive>
 void Classifier::serialize(Archive& ar, const unsigned int)
 {
-    auto impl = dynamic_cast<ClassifierImpl*>(this);
-    ar & impl;
+    ar.template register_type<ClassifierImpl>();
+    //auto impl = dynamic_cast<ClassifierImpl*>(this);
+    //ar & boost::serialization::make_nvp("Classifier_impl", impl);
 }
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Classifier)
+BOOST_CLASS_EXPORT_GUID(ClassifierImpl, "ClassifierImpl")
+
+#pragma warning(default : 4251)
